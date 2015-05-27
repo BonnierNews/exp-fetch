@@ -16,6 +16,7 @@ var dummyCache = {
     return resolve(callback);
   }
 };
+var passThrough = function (key) { return key; };
 
 // todo: formatFunction/cacheFunction/lookupFunction
 
@@ -23,6 +24,8 @@ function buildFetch(behavior) {
   behavior = behavior || {};
   var freeze = behavior.freeze || false;
   var cache = new AsyncCache();
+  var cacheKeyFn = behavior.cacheKeyFn || passThrough;
+  var maxAgeFn = behavior.maxAgeFn || passThrough;
 
   if (behavior.hasOwnProperty("cache")) {
     cache = behavior.cache || dummyCache;
@@ -32,25 +35,29 @@ function buildFetch(behavior) {
 
   function fetch(url, resultCallback) {
     var inner = function (callback) {
-      cache.lookup(url, function (resolvedCallback) {
-        logger.debug("fetching", url);
+
+      var cacheKey = cacheKeyFn(url);
+      cache.lookup(cacheKey, function (resolvedCallback) {
+        logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
         request.get({url: url, json: true, agent: keepAliveAgent}, function (err, res, content) {
           if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
+          var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res.headers, content);
 
-          if (res.statusCode !== 200) {
-            if (res.statusCode === 404) {
-              logger.info("404 Not Found for: %j", url);
-            } else {
-              logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
-            }
-            return resolvedCallback(null, null, getMaxAge(res.headers["cache-control"]));
+          if (res.statusCode === 404 || typeof content !== "object") {
+            logger.info("404 Not Found for: %j", url);
+            return resolvedCallback(null, null, maxAge);
+          }
+
+          if (res.statusCode > 200) {
+            logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
+            return resolvedCallback(new VError("%s yielded %s ", url, res.statusCode));
           }
 
           if (freeze) {
             Object.freeze(content);
           }
-          return resolvedCallback(null, content, getMaxAge(res.headers["cache-control"]));
+          return resolvedCallback(null, content, maxAge);
         });
       }, callback);
     };
@@ -65,7 +72,6 @@ function buildFetch(behavior) {
         });
       });
     }
-
   }
 
   var api = {

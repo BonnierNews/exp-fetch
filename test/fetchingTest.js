@@ -2,6 +2,7 @@
 
 var chai = require("chai");
 var should = chai.should();
+var Promise = require("bluebird");
 
 var fetchBuilder = require("../.");
 var nock = require("nock");
@@ -47,11 +48,11 @@ describe("fetch", function () {
       });
     });
 
-    it("should get null non 200", function (done) {
+    it("should render error on none 200", function (done) {
       fake.get(path).reply(500, {some: "content"}, {"cache-control": "no-cache"});
-      fetch(host + path, function (err, body) {
-        should.equal(body, null);
-        done(err);
+      fetch(host + path, function (err) {
+        should.exist(err);
+        done();
       });
     });
 
@@ -74,13 +75,13 @@ describe("fetch", function () {
   });
 
   describe("Caching", function () {
-    var fetch = fetchBuilder().fetch;
 
     afterEach(function () {
       nock.cleanAll();
     });
 
     it("should cache by default", function (done) {
+      var fetch = fetchBuilder().fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -94,18 +95,52 @@ describe("fetch", function () {
     });
 
     it("should not cache if falsy cache is given", function (done) {
-      var localFetch = fetchBuilder({cache: null}).fetch;
+      var fetch = fetchBuilder({cache: null}).fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
-      localFetch(host + path, function (err, body) {
+      fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
-        localFetch(host + path, function (err, body) {
+        fetch(host + path, function (err, body) {
           body.should.eql({some: "contentz"});
           done(err);
         });
       });
     });
 
+    it("should cache with a lookup function", function (done) {
+      var url = require("url");
+      fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
+      function cacheKeyFn(key) {
+        return url.parse(key).path.replace(/\//g, "");
+      }
+
+      var fetch = fetchBuilder({cacheKeyFn: cacheKeyFn}).fetch;
+      Promise.all([
+        fetch(host + path),
+        fetch("http://other.expample.com" + path),
+        fetch(host + "/testing/123/")
+      ]).then(function (result) {
+        result[0].should.eql({some: "content"});
+        result[0].should.eql(result[1]).eql(result[2]);
+        done();
+      },done);
+    });
+
+    it("should cache with a custom maxAgeFn", function (done) {
+      fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
+      function maxAgeFn(/* maxAge, key, headers, content */) {
+        return -1;
+      }
+
+      var fetch = fetchBuilder({maxAgeFn: maxAgeFn}).fetch;
+      fetch(host + path).then(function (content) {
+        fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
+        content.should.eql({some: "content"});
+        fetch(host + path).then(function (content) {
+          content.should.eql({some: "contentz"});
+          done();
+        },done);
+      }, done);
+    });
   });
 });
-
