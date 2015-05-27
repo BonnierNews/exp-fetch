@@ -4,7 +4,7 @@
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --reporter spec"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",

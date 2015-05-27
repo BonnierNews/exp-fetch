@@ -10,7 +10,6 @@ nock.disableNetConnect();
 nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
 var util = require("util");
 
-
 describe("fetch", function () {
   var host = "http://example.com";
   var path = "/testing123";
@@ -55,6 +54,23 @@ describe("fetch", function () {
         done(err);
       });
     });
+
+    it("should freeze content if freeze is set", function (done) {
+      var localFetch = fetchBuilder({freeze: true}).fetch;
+      fake.get(path).times(2).reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      fetch(host + path, function (err, content) {
+        should.not.throw(function () {
+          content.prop1 = true;
+        }, TypeError);
+        localFetch(host + path, function (err, content) {
+          should.throw(function () {
+            content.prop1 = true;
+          }, TypeError);
+          done(err);
+        });
+      });
+
+    });
   });
 
   describe("Caching", function () {
@@ -71,7 +87,7 @@ describe("fetch", function () {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
         fetch(host + path, function (err, body) {
           body.should.eql({some: "content"});
-          fake.pendingMocks().should.eql([util.format("GET %s:80%s", host , path)]);
+          fake.pendingMocks().should.eql([util.format("GET %s:80%s", host, path)]);
           done(err);
         });
       });
