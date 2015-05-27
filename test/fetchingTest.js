@@ -5,14 +5,29 @@ var should = chai.should();
 
 var fetchBuilder = require("../.");
 var nock = require("nock");
-var Log = require("log");
+//var Log = require("log");
 nock.disableNetConnect();
 nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
+var util = require("util");
+
 
 describe("fetch", function () {
   var host = "http://example.com";
   var path = "/testing123";
   var fake = nock(host);
+
+  it("should support callbacks and promises", function (done) {
+    var fetch = fetchBuilder().fetch;
+    fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
+    fetch(host + path, function (err, body) {
+      body.should.eql({some: "content"});
+      fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      fetch(host + path).then(function (body) {
+        body.should.eql({some: "content"});
+        done();
+      }, done);
+    });
+  });
 
   describe("Fetching a json endpoint", function () {
     var fetch = fetchBuilder().fetch;
@@ -56,6 +71,7 @@ describe("fetch", function () {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
         fetch(host + path, function (err, body) {
           body.should.eql({some: "content"});
+          fake.pendingMocks().should.eql([util.format("GET %s:80%s", host , path)]);
           done(err);
         });
       });
