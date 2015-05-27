@@ -1,0 +1,35 @@
+{
+  "name": "exp-fetch",
+  "version": "1.0.0",
+  "description": "A small pluggable fetch lib",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ExpressenAB/exp-fetch.git"
+  },
+  "keywords": [
+    "fetch",
+    "cache"
+  ],
+  "author": "AB Kvällstidningen Expressen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ExpressenAB/exp-fetch/issues"
+  },
+  "homepage": "https://github.com/ExpressenAB/exp-fetch",
+  "devDependencies": {
+    "chai": "^2.3.0",
+    "mocha": "^2.2.5",
+    "nock": "^2.2.0"
+  },
+  "dependencies": {
+    "exp-asynccache": "^1.1.0",
+    "forever-agent": "^0.6.1",
+    "log": "^1.4.0",
+    "request": "^2.55.0",
+    "verror": "^1.6.0"
+  }
+}
