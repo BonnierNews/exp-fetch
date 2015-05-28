@@ -17,7 +17,7 @@ describe("fetch", function () {
   var fake = nock(host);
 
   it("should support callbacks and promises", function (done) {
-    var fetch = fetchBuilder().fetch;
+    var fetch = fetchBuilder();
     fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
     fetch(host + path, function (err, body) {
       body.should.eql({some: "content"});
@@ -30,7 +30,7 @@ describe("fetch", function () {
   });
 
   describe("Fetching a json endpoint", function () {
-    var fetch = fetchBuilder().fetch;
+    var fetch = fetchBuilder();
 
     it("should should fetch an url", function (done) {
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
@@ -57,7 +57,7 @@ describe("fetch", function () {
     });
 
     it("should freeze content if freeze is set", function (done) {
-      var localFetch = fetchBuilder({freeze: true}).fetch;
+      var localFetch = fetchBuilder({freeze: true});
       fake.get(path).times(2).reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(host + path, function (err, content) {
         should.not.throw(function () {
@@ -74,9 +74,34 @@ describe("fetch", function () {
   });
 
   describe("Hooks", function () {
-    it("should call onNotFound if 404");
-    it("should call onError if responseCode > 200");
-    it("should call onSuccess if responseCode === 200 and content");
+    function testStatus(statusCode, callbackName, done) {
+      var called = false;
+
+      function eventCallback(/*url, cacheKey, headers*/) {
+        called = true;
+      }
+      var behavoir = {};
+      behavoir[callbackName] = eventCallback;
+
+      var fetch = fetchBuilder(behavoir);
+      fake.get(path).reply(statusCode, {}, {"cache-control": "no-cache"});
+      fetch(host + path, function () {
+        called.should.eql(true);
+        done();
+      });
+
+    }
+
+    it("should call onNotFound if 404", function (done) {
+      testStatus(404, "onNotFound", done);
+    });
+
+    it("should call onError if responseCode > 200", function (done) {
+      testStatus(500, "onError", done);
+    });
+    it("should call onSuccess if responseCode === 200 and content", function (done) {
+      testStatus(200, "onSuccess", done);
+    });
   });
 
   describe("Caching", function () {
@@ -86,7 +111,7 @@ describe("fetch", function () {
     });
 
     it("should cache by default", function (done) {
-      var fetch = fetchBuilder().fetch;
+      var fetch = fetchBuilder();
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -100,7 +125,7 @@ describe("fetch", function () {
     });
 
     it("should not cache if falsy cache is given", function (done) {
-      var fetch = fetchBuilder({cache: null}).fetch;
+      var fetch = fetchBuilder({cache: null});
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -119,7 +144,7 @@ describe("fetch", function () {
         return url.parse(key).path.replace(/\//g, "");
       }
 
-      var fetch = fetchBuilder({cacheKeyFn: cacheKeyFn}).fetch;
+      var fetch = fetchBuilder({cacheKeyFn: cacheKeyFn});
       Promise.all([
         fetch(host + path),
         fetch("http://other.expample.com" + path),
@@ -128,7 +153,7 @@ describe("fetch", function () {
         result[0].should.eql({some: "content"});
         result[0].should.eql(result[1]).eql(result[2]);
         done();
-      },done);
+      }, done);
     });
 
     it("should cache with a custom maxAgeFn", function (done) {
@@ -137,14 +162,14 @@ describe("fetch", function () {
         return -1;
       }
 
-      var fetch = fetchBuilder({maxAgeFn: maxAgeFn}).fetch;
+      var fetch = fetchBuilder({maxAgeFn: maxAgeFn});
       fetch(host + path).then(function (content) {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
         content.should.eql({some: "content"});
         fetch(host + path).then(function (content) {
           content.should.eql({some: "contentz"});
           done();
-        },done);
+        }, done);
       }, done);
     });
   });

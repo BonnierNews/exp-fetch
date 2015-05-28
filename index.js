@@ -26,6 +26,9 @@ function buildFetch(behavior) {
   var cache = new AsyncCache();
   var cacheKeyFn = behavior.cacheKeyFn || passThrough;
   var maxAgeFn = behavior.maxAgeFn || passThrough;
+  var onNotFound = behavior.onNotFound;
+  var onError = behavior.onError;
+  var onSuccess = behavior.onSuccess;
 
   if (behavior.hasOwnProperty("cache")) {
     cache = behavior.cache || dummyCache;
@@ -46,16 +49,25 @@ function buildFetch(behavior) {
 
           if (res.statusCode === 404 || typeof content !== "object") {
             logger.info("404 Not Found for: %j", url);
+            if (onNotFound) {
+              onNotFound(url, cacheKey, res.headers);
+            }
             return resolvedCallback(null, null, maxAge);
           }
 
           if (res.statusCode > 200) {
             logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
+            if (onError) {
+              onError(url, cacheKey, res.headers);
+            }
             return resolvedCallback(new VError("%s yielded %s ", url, res.statusCode));
           }
 
           if (freeze) {
             Object.freeze(content);
+          }
+          if (onSuccess) {
+            onSuccess(url, cacheKey, res.headers);
           }
           return resolvedCallback(null, content, maxAge);
         });
@@ -74,16 +86,7 @@ function buildFetch(behavior) {
     }
   }
 
-  var api = {
-    fetch: fetch,
-    cache: cache,
-    clearCache: function () {
-      if (cache && cache.cache) {
-        return cache.cache.reset();
-      }
-    }
-  };
-  return api;
+  return fetch;
 
 }
 
