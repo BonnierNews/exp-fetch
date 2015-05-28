@@ -15,6 +15,7 @@ describe("fetch", function () {
   var host = "http://example.com";
   var path = "/testing123";
   var fake = nock(host);
+  afterEach(nock.cleanAll);
 
   it("should support callbacks and promises", function (done) {
     var fetch = fetchBuilder();
@@ -105,11 +106,6 @@ describe("fetch", function () {
   });
 
   describe("Caching", function () {
-
-    afterEach(function () {
-      nock.cleanAll();
-    });
-
     it("should cache by default", function (done) {
       var fetch = fetchBuilder();
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
