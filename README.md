@@ -14,7 +14,7 @@ it will respect the `max-age` header.
 ```javascript
 var behavior = {};
 var fetch = fetchBuilder(behavior);
-fetch("http://example.com/resouce.json", function (err, content) {
+fetch("http://example.com/resource.json", function (err, content) {
     // Do something with the result
 });
 ```
@@ -24,7 +24,7 @@ fetch("http://example.com/resouce.json", function (err, content) {
 ```javascript
 var behavior = {};
 var fetch = fetchBuilder(behavior);
-fetch("http://example.com/resouce.json").then(function (content) {
+fetch("http://example.com/resource.json").then(function (content) {
     // Do something with the result
 });
 ```
