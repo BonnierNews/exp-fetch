@@ -80,10 +80,10 @@ describe("fetch", function () {
       function eventCallback(/*url, cacheKey, headers*/) {
         called = true;
       }
-      var behavoir = {};
-      behavoir[callbackName] = eventCallback;
+      var behavior = {};
+      behavior[callbackName] = eventCallback;
 
-      var fetch = fetchBuilder(behavoir);
+      var fetch = fetchBuilder(behavior);
       fake.get(path).reply(statusCode, {}, {"cache-control": "no-cache"});
       fetch(host + path, function () {
         called.should.eql(true);
