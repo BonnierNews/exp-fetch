@@ -70,8 +70,13 @@ describe("fetch", function () {
           done(err);
         });
       });
-
     });
+  });
+
+  describe("Hooks", function () {
+    it("should call onNotFound if 404");
+    it("should call onError if responseCode > 200");
+    it("should call onSuccess if responseCode === 200 and content");
   });
 
   describe("Caching", function () {
