@@ -6,7 +6,7 @@ A small and pluggable lib to fetch a resource and cache the result.
 
 ### Caching
 
-Fetch will parse the `cache-control` header. I it encounters `private`, `no-cache`, `max-age=0` or `must-revalidate` it wont cache. Otherwise
+Fetch will parse the `cache-control` header. If fetch encounters `private`, `no-cache`, `max-age=0` or `must-revalidate` it wont cache. Otherwise
 it will respect the `max-age` header.
 
 #### Callback usage:
@@ -32,7 +32,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 ### Allowed behavior options
 
 * `freeze`: (default:`false`). When this option is set it will freeze the response so it can't be modified.
-* `cache`: (default: `an instance of AsyncCache` (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
+* `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
 * `maxAgeFn`: (default: respects the `cache-control` header)
 * `onNotFound`: If given a function, it will be called each time fetch encounters a 404
