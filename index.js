@@ -26,6 +26,11 @@ function buildFetch(behavior) {
   var onSuccess = behavior.onSuccess;
   var cacheNotFound = false;
   var logger = behavior.logger || dummyLogger();
+  var errorOnRemoteError = true;
+
+  if (behavior.hasOwnProperty("errorOnRemoteError")) {
+    errorOnRemoteError = !!behavior.errorOnRemoteError;
+  }
 
   if (behavior.hasOwnProperty("cacheNotFound")) {
     cacheNotFound = behavior.cacheNotFound;
@@ -54,7 +59,8 @@ function buildFetch(behavior) {
     if (onError) {
       onError(url, cacheKey, res, content);
     }
-    return resolvedCallback(new VError("%s yielded %s ", url, res.statusCode));
+    var error = errorOnRemoteError ? new VError("%s yielded %s ", url, res.statusCode) : null;
+    return resolvedCallback(error, content);
   }
 
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {

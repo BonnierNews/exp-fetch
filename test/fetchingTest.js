@@ -224,6 +224,15 @@ describe("fetch", function () {
       });
     });
 
+    it("should not return an error if errorOnRemoteError is false", function (done) {
+      var fetch = fetchBuilder({errorOnRemoteError: false});
+      fake.get(path).reply(500);
+      fetch(host + path, function (err) {
+        should.not.exist(err);
+        done(err);
+      });
+    });
+
     it("should not cache errors with string response", function (done) {
       var fetch = fetchBuilder();
       fake.get(path).reply(500, "Internal Error");
