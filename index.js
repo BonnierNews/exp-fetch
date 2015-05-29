@@ -2,6 +2,7 @@
 var request = require("request");
 var VError = require("verror");
 var AsyncCache = require("exp-asynccache");
+var xml2js = require("xml2js");
 
 var getMaxAge = require("./lib/maxAgeFromHeader.js");
 var keepAliveAgent = require("./lib/keepAliveAgent");
@@ -12,6 +13,13 @@ var dummyCache = require("./lib/dummyCache");
 var initCache = require("./lib/initCache");
 
 var passThrough = function (key) { return key; };
+
+function parseResponse(content, contentType, callback) {
+  if (contentType === "xml") {
+    return xml2js.parseString(content, {explicitArray: false}, callback);
+  }
+  return callback(null, content);
+}
 
 function buildFetch(behavior) {
   behavior = behavior || {};
@@ -27,6 +35,7 @@ function buildFetch(behavior) {
   var cacheNotFound = false;
   var logger = behavior.logger || dummyLogger();
   var errorOnRemoteError = true;
+  var contentType = (behavior.contentType || "json").toLowerCase();
 
   if (behavior.hasOwnProperty("errorOnRemoteError")) {
     errorOnRemoteError = !!behavior.errorOnRemoteError;
@@ -71,6 +80,7 @@ function buildFetch(behavior) {
     if (onSuccess) {
       onSuccess(url, cacheKey, res, content);
     }
+
     return resolvedCallback(null, content, maxAge);
   }
 
@@ -82,7 +92,12 @@ function buildFetch(behavior) {
       cache.lookup(cacheKey, function (resolvedCallback) {
         logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
-        request.get({url: url, json: true, agent: keepAliveAgent}, function (err, res, content) {
+        var options = {
+          url: url,
+          json: contentType === "json",
+          agent: keepAliveAgent
+        };
+        request.get(options, function (err, res, content) {
           if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
 
           if (res.statusCode === 404) {
@@ -91,7 +106,9 @@ function buildFetch(behavior) {
             return handleError(url, cacheKey, res, content, resolvedCallback);
           }
 
-          return handleSuccess(url, cacheKey, res, content, resolvedCallback);
+          return parseResponse(content, contentType, function (err, transformed) {
+            return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
+          });
         });
       }, callback);
     };

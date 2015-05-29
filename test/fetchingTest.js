@@ -201,6 +201,7 @@ describe("fetch", function () {
         }
         return maxAge;
       }
+
       var fetch = fetchBuilder({cacheNotFound: -1, maxAgeFn: maxAgeFn});
       fake.get(path).reply(404);
       fetch(host + path, function () {
@@ -244,5 +245,32 @@ describe("fetch", function () {
         });
       });
     });
+  });
+
+  describe("contentType option", function () {
+    it("should fetch json", function (done) {
+      var fetch = fetchBuilder({contentType: "json"});
+      fake.get(path).reply(200, {some: "content"});
+      fetch(host + path, function (err, body) {
+        body.should.eql({some: "content"});
+        done(err);
+      });
+    });
+
+    it("should fetch (and parse) xml", function (done) {
+      var fetch = fetchBuilder({contentType: "xml"});
+      var xmlString = " <?xml version=\"1.0\" encoding=\"utf-8\"?><channel><title>Expressen: Nyheter</title><link>http://www.expressen.se/</link></channel>"
+      fake.get(path).reply(200, xmlString, {"ContentType": "text/xml"});
+      fetch(host + path, function (err, body) {
+        body.should.eql({
+          channel: {
+            title: "Expressen: Nyheter",
+            link: "http://www.expressen.se/"
+          }
+        });
+        done(err);
+      });
+    });
+
   });
 });
