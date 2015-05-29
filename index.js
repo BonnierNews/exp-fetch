@@ -5,12 +5,12 @@ var AsyncCache = require("exp-asynccache");
 var xml2js = require("xml2js");
 
 var getMaxAge = require("./lib/maxAgeFromHeader.js");
-var keepAliveAgent = require("./lib/keepAliveAgent");
 var dummyLogger = require("./lib/dummyLogger");
 var Promise = require("bluebird");
 var isNumber = require("./lib/isNumber");
 var dummyCache = require("./lib/dummyCache");
 var initCache = require("./lib/initCache");
+var Agent = require("forever-agent");
 
 var passThrough = function (key) { return key; };
 
@@ -36,6 +36,7 @@ function buildFetch(behavior) {
   var logger = behavior.logger || dummyLogger();
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
+  var keepAliveAgent = new Agent(behavior.agentOptions || {});
 
   if (behavior.hasOwnProperty("errorOnRemoteError")) {
     errorOnRemoteError = !!behavior.errorOnRemoteError;
