@@ -9,6 +9,8 @@ var dummyLogger = require("./lib/dummyLogger");
 var Promise = require("bluebird");
 var isNumber = require("./lib/isNumber");
 var dummyCache = require("./lib/dummyCache");
+var initCache = require("./lib/initCache");
+
 var passThrough = function (key) { return key; };
 
 function buildFetch(behavior) {
@@ -16,7 +18,7 @@ function buildFetch(behavior) {
 
   // Options
   var freeze = behavior.freeze || false;
-  var cache = new AsyncCache();
+  var cache = new AsyncCache(initCache({age: 60}));
   var cacheKeyFn = behavior.cacheKeyFn || passThrough;
   var maxAgeFn = behavior.maxAgeFn || passThrough;
   var onNotFound = behavior.onNotFound;
@@ -103,3 +105,4 @@ function buildFetch(behavior) {
 }
 
 module.exports = buildFetch;
+module.exports.initLRUCache = initCache;
