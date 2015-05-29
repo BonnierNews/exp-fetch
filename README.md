@@ -40,6 +40,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `onSuccess`: If given a function, it will be called each time fetch encounters a 200
 * `logger`: A logger object implementing `error`, `warning`, `info`, `debug` for example https://github.com/tj/log.js
 * `cacheNotFound`: (default: false). If set it will cache 404s, if given a number it will cache the 404 for that time. If the `maxAgeFn` is given, it will get this time as the first parameter.
+* `errorOnRemoteError`: (default: true). If set it will treat a remote > 200 statusCode as an error.
 
 #### CacheKeyFn
 
