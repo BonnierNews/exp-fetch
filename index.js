@@ -60,7 +60,7 @@ function buildFetch(behavior) {
       onError(url, cacheKey, res, content);
     }
     var error = errorOnRemoteError ? new VError("%s yielded %s ", url, res.statusCode) : null;
-    return resolvedCallback(error, content);
+    return resolvedCallback(error);
   }
 
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
