@@ -7,19 +7,9 @@ var getMaxAge = require("./lib/maxAgeFromHeader.js");
 var keepAliveAgent = require("./lib/keepAliveAgent");
 var dummyLogger = require("./lib/dummyLogger");
 var Promise = require("bluebird");
-
-var dummyCache = {
-  lookup: function (url, resolve, callback) {
-    return resolve(callback);
-  }
-};
-
-function isNumber(o) {
-  return !isNaN(o - 0) && o !== null && o !== "" && o !== false;
-}
+var isNumber = require("./lib/isNumber");
+var dummyCache = require("./lib/dummyCache");
 var passThrough = function (key) { return key; };
-
-// todo: formatFunction/cacheFunction/lookupFunction
 
 function buildFetch(behavior) {
   behavior = behavior || {};
