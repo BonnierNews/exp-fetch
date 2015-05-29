@@ -78,9 +78,10 @@ describe("fetch", function () {
     function testStatus(statusCode, callbackName, done) {
       var called = false;
 
-      function eventCallback(/*url, cacheKey, headers*/) {
+      function eventCallback(/*url, cacheKey, res, content*/) {
         called = true;
       }
+
       var behavior = {};
       behavior[callbackName] = eventCallback;
 
@@ -167,6 +168,72 @@ describe("fetch", function () {
           done();
         }, done);
       }, done);
+    });
+
+    it("should not cache 404s by default", function (done) {
+      var fetch = fetchBuilder();
+      fake.get(path).reply(404);
+      fetch(host + path, function () {
+        fake.get(path).reply(200, {some: "content"});
+        fetch(host + path, function (err, body) {
+          body.should.eql({some: "content"});
+          done(err);
+        });
+      });
+    });
+
+    it("should cache 404s if it has cacheNotFound set", function (done) {
+      var fetch = fetchBuilder({cacheNotFound: 1000});
+      fake.get(path).reply(404);
+      fetch(host + path, function () {
+        fake.get(path).reply(200, {some: "content"});
+        fetch(host + path, function (err, body) {
+          should.equal(body, null);
+          done(err);
+        });
+      });
+    });
+
+    it("should override cacheNotFound with maxAgeFn", function (done) {
+      function maxAgeFn(maxAge, cacheKey, res) {
+        if (res.statusCode === 404) {
+          return 1000;
+        }
+        return maxAge;
+      }
+      var fetch = fetchBuilder({cacheNotFound: -1, maxAgeFn: maxAgeFn});
+      fake.get(path).reply(404);
+      fetch(host + path, function () {
+        fake.get(path).reply(200, {some: "content"});
+        fetch(host + path, function (err, body) {
+          should.equal(body, null);
+          done(err);
+        });
+      });
+    });
+
+    it("should not cache errors with empty response", function (done) {
+      var fetch = fetchBuilder();
+      fake.get(path).reply(500);
+      fetch(host + path, function () {
+        fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
+        fetch(host + path, function (err, body) {
+          body.should.eql({some: "contentz"});
+          done(err);
+        });
+      });
+    });
+
+    it("should not cache errors with string response", function (done) {
+      var fetch = fetchBuilder();
+      fake.get(path).reply(500, "Internal Error");
+      fetch(host + path, function () {
+        fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
+        fetch(host + path, function (err, body) {
+          body.should.eql({some: "contentz"});
+          done(err);
+        });
+      });
     });
   });
 });
