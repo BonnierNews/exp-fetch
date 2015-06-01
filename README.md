@@ -71,12 +71,12 @@ var fetch = fetchBuilder({maxAgeFn: cacheNothing});
 
 ## Init cache function
 
-The fetch lib provides a convenient initCache-method which sets up a cache purging it's expired content.
+The fetch lib provides a convenient initLRUCache-method which sets up a cache purging it's expired content.
 
 ```javascript
 
-var initCache = require("exp-fetch").initCache;
-var cache = new AsyncCache(initCache({ age: 60, size: 2000});
+var initLRUCache = require("exp-fetch").initLRUCache;
+var cache = new AsyncCache(initLRUCache({ age: 60, size: 2000});
 ```
 
 ### Allowed params:
