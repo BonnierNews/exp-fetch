@@ -28,6 +28,7 @@ function buildFetch(behavior) {
   var freeze = behavior.freeze || false;
   var cache = new AsyncCache(initCache({age: 60}));
   var cacheKeyFn = behavior.cacheKeyFn || passThrough;
+  var cacheValueFn = behavior.cacheValueFn || passThrough;
   var maxAgeFn = behavior.maxAgeFn || passThrough;
   var onNotFound = behavior.onNotFound;
   var onError = behavior.onError;
@@ -61,7 +62,7 @@ function buildFetch(behavior) {
       notFoundAge = isNumber(cacheNotFound) ? Number(cacheNotFound) : getMaxAge(res.headers["cache-control"]);
     }
     notFoundAge = maxAgeFn(notFoundAge, cacheKey, res, content);
-    return resolvedCallback(null, null, notFoundAge);
+    return resolvedCallback(null, cacheValueFn(null, res.headers, res.statusCode), notFoundAge);
   }
 
   function handleError(url, cacheKey, res, content, resolvedCallback) {
@@ -70,7 +71,7 @@ function buildFetch(behavior) {
       onError(url, cacheKey, res, content);
     }
     var error = errorOnRemoteError ? new VError("%s yielded %s ", url, res.statusCode) : null;
-    return resolvedCallback(error);
+    return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode));
   }
 
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
@@ -82,7 +83,7 @@ function buildFetch(behavior) {
       onSuccess(url, cacheKey, res, content);
     }
 
-    return resolvedCallback(null, content, maxAge);
+    return resolvedCallback(null, cacheValueFn(content, res.headers, res.statusCode), maxAge);
   }
 
   // The main fetch function

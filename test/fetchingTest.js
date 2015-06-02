@@ -153,6 +153,29 @@ describe("fetch", function () {
       }, done);
     });
 
+    it("should cache with a custom value function", function (done) {
+      fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
+      var valueFn = function (body, headers, statusCode) {
+        return {
+          body: body,
+          headers: headers,
+          statusCode: statusCode
+        };
+      }
+      var fetch = fetchBuilder({cacheValueFn: valueFn});
+      fetch(host + path, function (err, content) {
+        content.should.eql({
+          body: {some: "content"},
+          headers: {
+            "content-type": "application/json",
+            "cache-control": "max-age=30"
+          },
+          statusCode: 200
+        });
+        done(err);
+      });
+    });
+
     it("should cache with a custom maxAgeFn", function (done) {
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       function maxAgeFn(/* maxAge, key, headers, content */) {
