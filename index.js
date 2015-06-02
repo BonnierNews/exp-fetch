@@ -2,7 +2,6 @@
 var request = require("request");
 var VError = require("verror");
 var AsyncCache = require("exp-asynccache");
-var xml2js = require("xml2js");
 
 var getMaxAge = require("./lib/maxAgeFromHeader.js");
 var dummyLogger = require("./lib/dummyLogger");
@@ -11,14 +10,17 @@ var isNumber = require("./lib/isNumber");
 var dummyCache = require("./lib/dummyCache");
 var initCache = require("./lib/initCache");
 var Agent = require("forever-agent");
+var parseResponse = require("./lib/parseResponse");
 
+var util = require("util");
+var url = require("url");
 var passThrough = function (key) { return key; };
 
-function parseResponse(content, contentType, callback) {
-  if (contentType === "xml") {
-    return xml2js.parseString(content, {explicitArray: false}, callback);
-  }
-  return callback(null, content);
+function isRedirect(response) {
+  if (!response) return false;
+  //if (!response.caseless.has("location")) return false;
+
+  return response.statusCode >= 300 && response.statusCode < 400;
 }
 
 function buildFetch(behavior) {
@@ -86,40 +88,60 @@ function buildFetch(behavior) {
     return resolvedCallback(null, cacheValueFn(content, res.headers, res.statusCode), maxAge);
   }
 
+  function handleRedirect(requestUrl, cacheKey, res, body, resolvedCallback) {
+    var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
+    var path = url.parse(res.headers.location).path;
+    var uri = res.request.uri;
+    var location = util.format("%s//%s%s", uri.protocol, uri.host, path);
+
+    var content = {
+      statusCode: res.statusCode,
+      location: location,
+      body: body
+    };
+    return resolvedCallback(null, content, maxAge);
+  }
+
+  function performGet(url, callback) {
+    var cacheKey = cacheKeyFn(url);
+    cache.lookup(cacheKey, function (resolvedCallback) {
+      logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
+
+      var options = {
+        url: url,
+        json: contentType === "json",
+        agent: keepAliveAgent,
+        followRedirect: false
+      };
+      request.get(options, function (err, res, content) {
+        if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
+        if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
+
+        if (res.statusCode === 404) {
+          return handleNotFound(url, cacheKey, res, content, resolvedCallback);
+        } else if (res.statusCode > 200) {
+          return handleError(url, cacheKey, res, content, resolvedCallback);
+        }
+
+        return parseResponse(content, contentType, function (err, transformed) {
+          return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
+        });
+      });
+    }, function (err, response) {
+      if (isRedirect(response)) {
+        return performGet(response.location, callback);
+      }
+      callback(err, response);
+    });
+  }
+
   // The main fetch function
   return function fetch(url, resultCallback) {
-    var inner = function (callback) {
-
-      var cacheKey = cacheKeyFn(url);
-      cache.lookup(cacheKey, function (resolvedCallback) {
-        logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
-
-        var options = {
-          url: url,
-          json: contentType === "json",
-          agent: keepAliveAgent
-        };
-        request.get(options, function (err, res, content) {
-          if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
-
-          if (res.statusCode === 404) {
-            return handleNotFound(url, cacheKey, res, content, resolvedCallback);
-          } else if (res.statusCode > 200) {
-            return handleError(url, cacheKey, res, content, resolvedCallback);
-          }
-
-          return parseResponse(content, contentType, function (err, transformed) {
-            return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
-          });
-        });
-      }, callback);
-    };
-
     if (resultCallback) {
-      inner(resultCallback);
+      performGet(url, resultCallback);
     } else {
       return new Promise(function (resolve, reject) {
-        inner(function (err, content) {
+        performGet(url, function (err, content) {
           if (err) return reject(err);
           return resolve(content);
         });
