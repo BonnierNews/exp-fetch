@@ -3,8 +3,10 @@ fetch
 
 A small and pluggable lib to fetch a resource and cache the result.
 
+### Usage
+By default fetch will treat all response codes expect 200 and 404 as errors. 404 will yield `null` and 200 the body
 
-### Caching
+#### Caching
 
 Fetch will parse the `cache-control` header. If fetch encounters `private`, `no-cache`, `max-age=0` or `must-revalidate` it wont cache. Otherwise
 it will respect the `max-age` header.
@@ -34,6 +36,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `freeze`: (default:`false`). When this option is set it will freeze the response so it can't be modified.
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
+* `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `maxAgeFn`: (default: respects the `cache-control` header)
 * `onNotFound`: If given a function, it will be called each time fetch encounters a 404
 * `onError`: If given a function, it will be called each time fetch encounters a non 200 nor 404 response
@@ -59,6 +62,24 @@ Promise.all([
 });
 ```
 
+#### CacheValueFn
+
+
+```javascript
+var valueFn  = function (body, headers, statusCode) {
+    return {
+        body: body,
+        headers: headers,
+        statusCode: statusCode
+    };
+}
+var fetch = fetchBuilder({cacheValueFn: valueFn});
+fetch("http://example.com/resource.json", function (err, value) {
+  // value will be something like:
+  // { statusCode: 200, header: { "content-type": "application/json" }, body: { "resource": "body" } }
+})
+```
+
 #### maxAgeFn
 
 ```javascript
@@ -68,6 +89,15 @@ function cacheNothing(maxAge, key, res, content) {
 var fetch = fetchBuilder({maxAgeFn: cacheNothing});
 ```
 
+#### Hooks
+
+They are: `onError`, `onNotFound` and `onSuccess`. Signature:
+
+```javascript
+function onError(url, cacheKey, res, content) {
+    //
+}
+```
 
 ## Init cache function
 
