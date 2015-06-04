@@ -87,7 +87,7 @@ function buildFetch(behavior) {
     if (onError) {
       onError(url, cacheKey, res, content);
     }
-    var error = errorOnRemoteError ? new VError("%s yielded %s ", url, res.statusCode) : null;
+    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, content) : null;
     return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode));
   }
 
@@ -103,7 +103,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, cacheValueFn(content, res.headers, res.statusCode), maxAge);
   }
 
-  function handleRedirect(requestUrl, cacheKey, res, body, resolvedCallback) {
+  function handleRedirect(url, cacheKey, res, body, resolvedCallback) {
     var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
 
     var content = {
