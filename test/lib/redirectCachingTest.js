@@ -74,7 +74,7 @@ describe("Fetching redirected resources", function () {
         location: host + "/otherPath",
         headers: {
           "cache-control": "no-cache",
-          "location": host + "/otherPath",
+          "location": host + "/otherPath"
         }
       });
       done(err);
