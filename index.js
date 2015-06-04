@@ -87,7 +87,7 @@ function buildFetch(behavior) {
     if (onError) {
       onError(url, cacheKey, res, content);
     }
-    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, content) : null;
+    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content)) : null;
     return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode));
   }
 

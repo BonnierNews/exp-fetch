@@ -294,6 +294,5 @@ describe("fetch", function () {
         done(err);
       });
     });
-
   });
 });
