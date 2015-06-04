@@ -71,7 +71,6 @@ describe("Fetching redirected resources", function () {
       should.exist(content);
       content.should.eql({
         statusCode: 302,
-        location: host + "/otherPath",
         headers: {
           "cache-control": "no-cache",
           "location": host + "/otherPath"

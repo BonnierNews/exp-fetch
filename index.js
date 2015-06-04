@@ -23,6 +23,11 @@ function isRedirect(response) {
   return response.statusCode >= 300 && response.statusCode < 400;
 }
 
+function ensureAbsoluteUrl(headers, uri) {
+  var path = url.parse(headers.location).path;
+  var parsed = url.parse(uri);
+  return util.format("%s//%s%s", parsed.protocol, parsed.host, path);
+}
 function buildFetch(behavior) {
   behavior = behavior || {};
 
@@ -100,13 +105,9 @@ function buildFetch(behavior) {
 
   function handleRedirect(requestUrl, cacheKey, res, body, resolvedCallback) {
     var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
-    var path = url.parse(res.headers.location).path;
-    var uri = res.request.uri;
-    var location = util.format("%s//%s%s", uri.protocol, uri.host, path);
 
     var content = {
       statusCode: res.statusCode,
-      location: location,
       headers: res.headers
     };
     return resolvedCallback(null, content, maxAge);
@@ -140,7 +141,8 @@ function buildFetch(behavior) {
     }, function (err, response) {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
-          return performGet(response.location, redirectCount, callback);
+          var location = ensureAbsoluteUrl(response.headers, url);
+          return performGet(location, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
