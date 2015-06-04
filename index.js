@@ -40,6 +40,11 @@ function buildFetch(behavior) {
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
+  var followRedirect = true;
+
+  if (behavior.hasOwnProperty("followRedirect")) {
+    followRedirect = !!behavior.followRedirect;
+  }
 
   if (behavior.hasOwnProperty("errorOnRemoteError")) {
     errorOnRemoteError = !!behavior.errorOnRemoteError;
@@ -128,7 +133,7 @@ function buildFetch(behavior) {
         });
       });
     }, function (err, response) {
-      if (isRedirect(response)) {
+      if (followRedirect && isRedirect(response)) {
         return performGet(response.location, callback);
       }
       callback(err, response);

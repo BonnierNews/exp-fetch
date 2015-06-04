@@ -1,7 +1,7 @@
 "use strict";
 
-//var chai = require("chai");
-//var should = chai.should();
+var chai = require("chai");
+var should = chai.should();
 //var Promise = require("bluebird");
 
 var fetchBuilder = require("../../.");
@@ -63,4 +63,19 @@ describe("Fetching redirected resources", function () {
     });
   });
 
+  it("should not follow redirects if followRedirect is set to false", function (done) {
+    var fetch = fetchBuilder({followRedirect: false});
+    fakeRedirect(path, host + "/otherPath");
+    fetch(host + path, function (err, content) {
+      if (err) return done(err);
+      should.exist(content);
+      content.should.eql({
+        statusCode: 302,
+        location: host + "/otherPath",
+        body: undefined
+      });
+      done(err);
+    });
+
+  });
 });
