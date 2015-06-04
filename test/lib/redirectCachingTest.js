@@ -72,7 +72,10 @@ describe("Fetching redirected resources", function () {
       content.should.eql({
         statusCode: 302,
         location: host + "/otherPath",
-        body: undefined
+        headers: {
+          "cache-control": "no-cache",
+          "location": host + "/otherPath",
+        }
       });
       done(err);
     });

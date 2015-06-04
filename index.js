@@ -107,7 +107,7 @@ function buildFetch(behavior) {
     var content = {
       statusCode: res.statusCode,
       location: location,
-      body: body
+      headers: res.headers
     };
     return resolvedCallback(null, content, maxAge);
   }
