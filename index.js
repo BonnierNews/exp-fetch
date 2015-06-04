@@ -27,7 +27,7 @@ function buildFetch(behavior) {
   behavior = behavior || {};
 
   // Options
-  var freeze = behavior.freeze || false;
+  var freeze = true;
   var cache = new AsyncCache(initCache({age: 60}));
   var cacheKeyFn = behavior.cacheKeyFn || passThrough;
   var cacheValueFn = behavior.cacheValueFn || passThrough;
@@ -42,6 +42,10 @@ function buildFetch(behavior) {
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
   var maximumNumberOfRedirects = 10;
+
+  if (behavior.hasOwnProperty("freeze")) {
+    freeze = !!behavior.freeze;
+  }
 
   if (behavior.hasOwnProperty("followRedirect")) {
     followRedirect = !!behavior.followRedirect;

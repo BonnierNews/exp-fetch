@@ -57,15 +57,15 @@ describe("fetch", function () {
       });
     });
 
-    it("should freeze content if freeze is set", function (done) {
-      var localFetch = fetchBuilder({freeze: true});
+    it("should not freeze content if freeze is set to false", function (done) {
+      var localFetch = fetchBuilder({freeze:false});
       fake.get(path).times(2).reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(host + path, function (err, content) {
-        should.not.throw(function () {
+        should.throw(function () {
           content.prop1 = true;
         }, TypeError);
         localFetch(host + path, function (err, content) {
-          should.throw(function () {
+          should.not.throw(function () {
             content.prop1 = true;
           }, TypeError);
           done(err);

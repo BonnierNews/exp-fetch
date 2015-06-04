@@ -33,7 +33,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 
 ### Allowed behavior options
 
-* `freeze`: (default:`false`). When this option is set it will freeze the response so it can't be modified.
+* `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
