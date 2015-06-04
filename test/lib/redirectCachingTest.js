@@ -76,6 +76,19 @@ describe("Fetching redirected resources", function () {
       });
       done(err);
     });
+  });
 
+  it("should only follow 10 redirects", function (done) {
+    var fetch = fetchBuilder();
+    fake.get("/20").reply(200, {some: "content"});
+    fakeRedirect(path, host + "/1");
+    for (var i = 1; i < 20; i++) {
+      fakeRedirect("/" + i, host + "/" + (i + 1));
+    }
+    fetch(host + path, function (err, content) {
+      should.exist(err);
+      should.not.exist(content);
+      done();
+    });
   });
 });

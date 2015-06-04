@@ -46,6 +46,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `errorOnRemoteError`: (default: true). If set it will treat a remote > 200 statusCode as an error.
 * `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
 * `agentOptions`: (default: `{}`), options passed to the keepAliveAgent.
+* `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
 
 #### CacheKeyFn
 

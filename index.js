@@ -41,6 +41,7 @@ function buildFetch(behavior) {
   var contentType = (behavior.contentType || "json").toLowerCase();
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
+  var maximumNumberOfRedirects = 10;
 
   if (behavior.hasOwnProperty("followRedirect")) {
     followRedirect = !!behavior.followRedirect;
@@ -107,7 +108,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performGet(url, callback) {
+  function performGet(url, redirectCount, callback) {
     var cacheKey = cacheKeyFn(url);
     cache.lookup(cacheKey, function (resolvedCallback) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
@@ -134,7 +135,11 @@ function buildFetch(behavior) {
       });
     }, function (err, response) {
       if (followRedirect && isRedirect(response)) {
-        return performGet(response.location, callback);
+        if (redirectCount++ < maximumNumberOfRedirects) {
+          return performGet(response.location, redirectCount, callback);
+        } else {
+          return callback(new VError("Maximum number of redirects exceeded while fetching", url));
+        }
       }
       callback(err, response);
     });
@@ -143,10 +148,10 @@ function buildFetch(behavior) {
   // The main fetch function
   return function fetch(url, resultCallback) {
     if (resultCallback) {
-      performGet(url, resultCallback);
+      performGet(url, 0, resultCallback);
     } else {
       return new Promise(function (resolve, reject) {
-        performGet(url, function (err, content) {
+        performGet(url, 0, function (err, content) {
           if (err) return reject(err);
           return resolve(content);
         });
