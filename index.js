@@ -28,6 +28,7 @@ function ensureAbsoluteUrl(headers, uri) {
   var parsed = url.parse(uri);
   return util.format("%s//%s%s", parsed.protocol, parsed.host, path);
 }
+
 function buildFetch(behavior) {
   behavior = behavior || {};
 

@@ -35,6 +35,17 @@ describe("Fetching redirected resources", function () {
     });
   });
 
+  it("should handle get params", function (done) {
+    var fetch = fetchBuilder();
+    fakeRedirect(path, "/otherPath?contentId=22");
+    fake.get("/otherPath?contentId=11").reply(200, {some: "content11"});
+    fake.get("/otherPath?contentId=22").reply(200, {some: "content22"});
+    fetch(host + path, function (err, content) {
+      content.should.eql({some: "content22"});
+      done(err);
+    });
+  });
+
   it("should cache redirects on the destination url", function (done) {
     var fetch = fetchBuilder();
     fakeRedirect(path, host + "/otherPath");
