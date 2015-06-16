@@ -47,6 +47,7 @@ function buildFetch(behavior) {
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
   var maximumNumberOfRedirects = 10;
+  var onBefore = behavior.before;
 
   if (behavior.hasOwnProperty("freeze")) {
     freeze = !!behavior.freeze;
@@ -124,6 +125,17 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false
       };
+
+      if (onBefore) {
+        var passOptions = {
+          url: options.url,
+          json: options.json,
+          followRedirect: followRedirect
+        };
+
+        onBefore(passOptions, cacheKey);
+      }
+
       request.get(options, function (err, res, content) {
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
