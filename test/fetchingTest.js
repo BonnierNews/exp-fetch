@@ -105,10 +105,10 @@ describe("fetch", function () {
       testStatus(200, "onSuccess", done);
     });
 
-    it("should call before with request options", function (done) {
+    it("should call onRequestInit with request options", function (done) {
       var called = false;
       var behavior = {
-        before: function(options) {
+        onRequestInit: function(options) {
           options.should.have.property("url");
           options.should.have.property("json", true);
           options.should.have.property("followRedirect", true);
@@ -119,18 +119,20 @@ describe("fetch", function () {
       };
 
       var fetch = fetchBuilder(behavior);
-      fetch(host + path, function (err, res) {
+      fetch(host + path, function (err) {
         if (err) return done(err);
         called.should.eql(true);
         done();
       });
     });
 
-    it("should honour call before with followRedirect false", function (done) {
+    it("should honour call onRequestInit with followRedirect false", function (done) {
       var called = false;
       var behavior = {
         followRedirect: false,
-        before: function(options) {
+        onRequestInit: function(options) {
+          if (called) throw new Error("Called twice!");
+
           options.should.have.property("url");
           options.should.have.property("json", true);
           options.should.have.property("followRedirect", false);
@@ -144,8 +146,60 @@ describe("fetch", function () {
         if (err) return done(err);
         called.should.eql(true);
         res.statusCode.should.eql(301);
-        res.headers.should.have.property("location", "http://example.com")
+        res.headers.should.have.property("location", "http://example.com");
         done();
+      });
+    });
+
+    it("onRequestInit is only called once", function (done) {
+      var called = false;
+      var behavior = {
+        followRedirect: true,
+        onRequestInit: function(options) {
+          if (called) throw new Error("Called twice!");
+
+          options.should.have.property("url");
+          options.should.have.property("json", true);
+          options.should.have.property("followRedirect", true);
+          fake.get(path).reply(301, {}, {"cache-control": "no-cache", "location": host + "/actual-content"});
+          fake.get("/actual-content").reply(200, {}, {"cache-control": "no-cache"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err, res) {
+        if (err) return done(err);
+        called.should.eql(true);
+        done();
+      });
+    });
+
+    it("onRequestInit is called before each fetch", function (done) {
+      var called = false;
+      var behavior = {
+        followRedirect: true,
+        onRequestInit: function(options) {
+          if (called) throw new Error("Called twice!");
+
+          options.should.have.property("url");
+          options.should.have.property("json", true);
+          options.should.have.property("followRedirect", true);
+          fake.get(path).reply(301, {}, {"cache-control": "no-cache", "location": host + "/actual-content"});
+          fake.get("/actual-content").reply(200, {}, {"cache-control": "no-cache"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err, res) {
+        if (err) return done(err);
+        called = false;
+        fetch(host + path, function (err, res) {
+          if (err) return done(err);
+          called.should.eql(true);
+          done();
+        });
       });
     });
   });
@@ -205,7 +259,7 @@ describe("fetch", function () {
           headers: headers,
           statusCode: statusCode
         };
-      }
+      };
       var fetch = fetchBuilder({cacheValueFn: valueFn});
       fetch(host + path, function (err, content) {
         content.should.eql({

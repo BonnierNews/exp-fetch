@@ -47,7 +47,13 @@ function buildFetch(behavior) {
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
   var maximumNumberOfRedirects = 10;
-  var onBefore = behavior.before;
+  var onRequestInitCalled = false;
+  var onRequestInit = function() {
+    if (behavior.onRequestInit) {
+      behavior.onRequestInit.apply(null, arguments);
+    } 
+    onRequestInitCalled = true;
+  };
 
   if (behavior.hasOwnProperty("freeze")) {
     freeze = !!behavior.freeze;
@@ -126,14 +132,14 @@ function buildFetch(behavior) {
         followRedirect: false
       };
 
-      if (onBefore) {
+      if (!onRequestInitCalled) {
         var passOptions = {
           url: options.url,
           json: options.json,
           followRedirect: followRedirect
         };
 
-        onBefore(passOptions, cacheKey);
+        onRequestInit(passOptions, cacheKey);
       }
 
       request.get(options, function (err, res, content) {
@@ -165,6 +171,7 @@ function buildFetch(behavior) {
 
   // The main fetch function
   return function fetch(url, resultCallback) {
+    onRequestInitCalled = false;
     if (resultCallback) {
       performGet(url, 0, resultCallback);
     } else {
