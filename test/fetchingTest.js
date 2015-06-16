@@ -104,6 +104,50 @@ describe("fetch", function () {
     it("should call onSuccess if responseCode === 200 and content", function (done) {
       testStatus(200, "onSuccess", done);
     });
+
+    it("should call before with request options", function (done) {
+      var called = false;
+      var behavior = {
+        before: function(options) {
+          options.should.have.property("url");
+          options.should.have.property("json", true);
+          options.should.have.property("followRedirect", true);
+
+          fake.get(path).reply(200, {}, {"cache-control": "no-cache"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err, res) {
+        if (err) return done(err);
+        called.should.eql(true);
+        done();
+      });
+    });
+
+    it("should honour call before with followRedirect false", function (done) {
+      var called = false;
+      var behavior = {
+        followRedirect: false,
+        before: function(options) {
+          options.should.have.property("url");
+          options.should.have.property("json", true);
+          options.should.have.property("followRedirect", false);
+          fake.get(path).reply(301, {}, {"cache-control": "no-cache", "location": "http://example.com"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err, res) {
+        if (err) return done(err);
+        called.should.eql(true);
+        res.statusCode.should.eql(301);
+        res.headers.should.have.property("location", "http://example.com")
+        done();
+      });
+    });
   });
 
   describe("Caching", function () {
@@ -294,6 +338,5 @@ describe("fetch", function () {
         done(err);
       });
     });
-
   });
 });

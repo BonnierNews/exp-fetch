@@ -100,6 +100,29 @@ function onError(url, cacheKey, res, content) {
 }
 ```
 
+They are: `before` with signature:
+
+```javascript
+function onBefore(requestOptions, cacheKey) {
+    //
+}
+```
+
+Usefull when mocking requests, e.g:
+
+```javascript
+var url = require("url");
+var nock = require("nock");
+
+function onBefore(requestOptions, cacheKey) {
+    var callUrl = url.parse(requestOptions.url);
+    var path = callUrl.path;
+    var host = callUrl.protocol + "//" + callUrl.host;
+
+    nock(host).get(path).reply(200, {mock: true});
+}
+```
+
 ## Init cache function
 
 The fetch lib provides a convenient initLRUCache-method which sets up a cache purging it's expired content.

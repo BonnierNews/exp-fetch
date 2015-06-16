@@ -47,6 +47,7 @@ function buildFetch(behavior) {
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
   var maximumNumberOfRedirects = 10;
+  var onBefore = behavior.before;
 
   if (behavior.hasOwnProperty("freeze")) {
     freeze = !!behavior.freeze;
@@ -87,7 +88,7 @@ function buildFetch(behavior) {
     if (onError) {
       onError(url, cacheKey, res, content);
     }
-    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, content) : null;
+    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content)) : null;
     return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode));
   }
 
@@ -124,6 +125,17 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false
       };
+
+      if (onBefore) {
+        var passOptions = {
+          url: options.url,
+          json: options.json,
+          followRedirect: followRedirect
+        };
+
+        onBefore(passOptions, cacheKey);
+      }
+
       request.get(options, function (err, res, content) {
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
