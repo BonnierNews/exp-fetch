@@ -50,6 +50,13 @@ function buildFetch(behavior) {
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
+  var onRequestInitCalled = false;
+  var onRequestInit = function() {
+    if (behavior.onRequestInit) {
+      behavior.onRequestInit.apply(null, arguments);
+    } 
+    onRequestInitCalled = true;
+  };
 
   if (behavior.hasOwnProperty("clone")) {
     performClone = !!behavior.clone;
@@ -131,6 +138,17 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false
       };
+
+      if (!onRequestInitCalled) {
+        var passOptions = {
+          url: options.url,
+          json: options.json,
+          followRedirect: followRedirect
+        };
+
+        onRequestInit(passOptions, cacheKey);
+      }
+
       request.get(options, function (err, res, content) {
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
@@ -160,6 +178,7 @@ function buildFetch(behavior) {
 
   // The main fetch function
   return function fetch(url, resultCallback) {
+    onRequestInitCalled = false;
     if (resultCallback) {
       performGet(url, 0, resultCallback);
     } else {

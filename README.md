@@ -38,6 +38,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `cacheKeyFn`: (default: caches on the url) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `maxAgeFn`: (default: respects the `cache-control` header)
+* `onRequestInit`: If given a function, it will be called before the actual request is made, see [Hooks](#hooks) for signature
 * `onNotFound`: If given a function, it will be called each time fetch encounters a 404
 * `onError`: If given a function, it will be called each time fetch encounters a non 200 nor 404 response
 * `onSuccess`: If given a function, it will be called each time fetch encounters a 200
@@ -99,6 +100,33 @@ They are: `onError`, `onNotFound` and `onSuccess`. Signature:
 function onError(url, cacheKey, res, content) {
     //
 }
+```
+
+And `onRequestInit` with signature:
+
+```javascript
+function onRequestInit(requestOptions, cacheKey) {
+    //
+}
+```
+
+The function will be called once before the actual request is made, i.e. not found in cache. Subsequent redirect requests does not call the function. The `requestOptions` argument is a copy of the request options and will not alter the request.
+
+Useful when mocking requests, e.g:
+
+```javascript
+var url = require("url");
+var nock = require("nock");
+
+function onRequestInit(requestOptions, cacheKey) {
+    var callUrl = url.parse(requestOptions.url);
+    var path = callUrl.path;
+    var host = callUrl.protocol + "//" + callUrl.host;
+
+    nock(host).get(path).reply(200, {mock: true});
+}
+
+var fetch = fetchBuilder({onRequestInit: onRequestInit});
 ```
 
 ## Init cache function
