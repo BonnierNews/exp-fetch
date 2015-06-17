@@ -168,7 +168,7 @@ describe("fetch", function () {
       };
 
       var fetch = fetchBuilder(behavior);
-      fetch(host + path, function (err, res) {
+      fetch(host + path, function (err) {
         if (err) return done(err);
         called.should.eql(true);
         done();
@@ -192,14 +192,37 @@ describe("fetch", function () {
       };
 
       var fetch = fetchBuilder(behavior);
-      fetch(host + path, function (err, res) {
+      fetch(host + path, function (err) {
         if (err) return done(err);
         called = false;
-        fetch(host + path, function (err, res) {
+        fetch(host + path, function (err) {
           if (err) return done(err);
           called.should.eql(true);
           done();
         });
+      });
+    });
+
+    it("onRequestInit is called before in parallel fetch", function (done) {
+      var called = [];
+      var behavior = {
+        followRedirect: true,
+        onRequestInit: function(options) {
+          called.push(options.url);
+        }
+      };
+
+      fake.get("/parallel-1").delay(98).reply(200, {}, {"cache-control": "no-cache"});
+      fake.get("/parallel-2").reply(200, {}, {"cache-control": "no-cache"});
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + "/parallel-1", function (err) {
+        if (err) return done(err);
+        called.length.should.eql(2);
+        done();
+      });
+      fetch(host + "/parallel-2", function (err) {
+        if (err) return done(err);
       });
     });
   });
@@ -380,7 +403,7 @@ describe("fetch", function () {
 
     it("should fetch (and parse) xml", function (done) {
       var fetch = fetchBuilder({contentType: "xml"});
-      var xmlString = " <?xml version=\"1.0\" encoding=\"utf-8\"?><channel><title>Expressen: Nyheter</title><link>http://www.expressen.se/</link></channel>"
+      var xmlString = " <?xml version=\"1.0\" encoding=\"utf-8\"?><channel><title>Expressen: Nyheter</title><link>http://www.expressen.se/</link></channel>";
       fake.get(path).reply(200, xmlString, {"ContentType": "text/xml"});
       fetch(host + path, function (err, body) {
         body.should.eql({
