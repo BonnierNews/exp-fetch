@@ -50,13 +50,6 @@ function buildFetch(behavior) {
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
-  var onRequestInitCalled = false;
-  var onRequestInit = function() {
-    if (behavior.onRequestInit) {
-      behavior.onRequestInit.apply(null, arguments);
-    } 
-    onRequestInitCalled = true;
-  };
 
   if (behavior.hasOwnProperty("clone")) {
     performClone = !!behavior.clone;
@@ -127,7 +120,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performGet(url, redirectCount, callback) {
+  function performGet(url, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url);
     cache.lookup(cacheKey, function (resolvedCallback) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
@@ -139,7 +132,7 @@ function buildFetch(behavior) {
         followRedirect: false
       };
 
-      if (!onRequestInitCalled) {
+      if (onRequestInit && !onRequestInit.called) {
         var passOptions = {
           url: options.url,
           json: options.json,
@@ -178,15 +171,21 @@ function buildFetch(behavior) {
 
   // The main fetch function
   return function fetch(url, resultCallback) {
-    onRequestInitCalled = false;
+    var onRequestInit = function() {
+      if (behavior.onRequestInit) {
+        behavior.onRequestInit.apply(null, arguments);
+      } 
+      onRequestInit.called = true;
+    };
+
     if (resultCallback) {
-      performGet(url, 0, resultCallback);
+      performGet(url, 0, resultCallback, onRequestInit);
     } else {
       return new Promise(function (resolve, reject) {
         performGet(url, 0, function (err, content) {
           if (err) return reject(err);
           return resolve(content);
-        });
+        }, onRequestInit);
       });
     }
   };
