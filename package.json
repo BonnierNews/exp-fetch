@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "scripts": {
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "bluebird": "^2.9.26",
+    "clone": "^1.0.2",
     "exp-asynccache": "^1.1.0",
     "forever-agent": "^0.6.1",
     "log": "^1.4.0",

@@ -47,6 +47,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
 * `agentOptions`: (default: `{}`), options passed to the keepAliveAgent.
 * `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
+* `clone`: (default: true), should fetch clone objects before handing them from the cache.
 
 #### CacheKeyFn
 

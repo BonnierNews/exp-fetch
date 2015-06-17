@@ -11,6 +11,7 @@ var dummyCache = require("./lib/dummyCache");
 var initCache = require("./lib/initCache");
 var Agent = require("forever-agent");
 var parseResponse = require("./lib/parseResponse");
+var clone = require("clone");
 
 var util = require("util");
 var url = require("url");
@@ -47,7 +48,12 @@ function buildFetch(behavior) {
   var contentType = (behavior.contentType || "json").toLowerCase();
   var keepAliveAgent = new Agent(behavior.agentOptions || {});
   var followRedirect = true;
+  var performClone = true;
   var maximumNumberOfRedirects = 10;
+
+  if (behavior.hasOwnProperty("clone")) {
+    performClone = !!behavior.clone;
+  }
 
   if (behavior.hasOwnProperty("freeze")) {
     freeze = !!behavior.freeze;
@@ -148,7 +154,7 @@ function buildFetch(behavior) {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
       }
-      callback(err, response);
+      callback(err, (performClone ? clone(response) : response));
     });
   }
 

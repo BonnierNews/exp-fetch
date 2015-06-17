@@ -31,7 +31,7 @@ describe("fetch", function () {
   });
 
   describe("Fetching a json endpoint", function () {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder({clone:false});
 
     it("should should fetch an url", function (done) {
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
@@ -58,7 +58,7 @@ describe("fetch", function () {
     });
 
     it("should not freeze content if freeze is set to false", function (done) {
-      var localFetch = fetchBuilder({freeze:false});
+      var localFetch = fetchBuilder({freeze:false, clone: false});
       fake.get(path).times(2).reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(host + path, function (err, content) {
         should.throw(function () {
