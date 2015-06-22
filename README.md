@@ -36,7 +36,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 
 * `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
-* `cacheKeyFn`: (default: caches on the url) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
+* `cacheKeyFn`: (default: caches on the url + sha1 of the body) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `maxAgeFn`: (default: respects the `cache-control` header)
 * `onRequestInit`: If given a function, it will be called before the actual request is made, see [Hooks](#hooks) for signature
@@ -50,6 +50,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `agentOptions`: (default: `{}`), options passed to the keepAliveAgent.
 * `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
+* `httpMethod`: (default: "GET"), the HTTP-method that should be used to make requests. 
 
 #### CacheKeyFn
 
