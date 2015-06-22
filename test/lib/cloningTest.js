@@ -11,7 +11,7 @@ describe("Fetching redirected resources", function () {
   var fake = nock(host);
   afterEach(nock.cleanAll);
 
-  function fakeReponse(pathName) {
+  function fakeResponse(pathName) {
     fake
       .get(pathName)
       .reply(200, {a: 1, b: 2});
@@ -19,7 +19,7 @@ describe("Fetching redirected resources", function () {
 
   it("should clone an object by default", function (done) {
     var fetch = fetchBuilder({freeze: false});
-    fakeReponse(path);
+    fakeResponse(path);
     fetch(host + path, function (err, content) {
       content.should.eql({a: 1, b: 2});
       content.b = "other";
@@ -32,7 +32,7 @@ describe("Fetching redirected resources", function () {
 
   it("should not clone an object if clone is set to false", function (done) {
     var fetch = fetchBuilder({freeze: false, clone: false});
-    fakeReponse(path);
+    fakeResponse(path);
     fetch(host + path, function (err, content) {
       content.should.eql({a: 1, b: 2});
       content.b = "other";

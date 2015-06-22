@@ -11,10 +11,10 @@ describe("Posting", function () {
   var fake = nock(host);
   afterEach(nock.cleanAll);
 
-  function fakeReponse(pathName, body) {
+  function fakeResponse(pathName, body, response) {
     fake
       .post(pathName, body)
-      .reply(200, {a: 1, b: 2});
+      .reply(200, response);
   }
 
   function fakeRedirect(from, to) {
@@ -29,10 +29,26 @@ describe("Posting", function () {
   it("should make a post request", function (done) {
     var fetch = fetchBuilder({httpMethod: "POST"});
     var body = {q: "term"};
-    fakeReponse(path, body);
+    var response = {a: 1, b: 2};
+
+    fakeResponse(path, body, response);
     fetch(host + path, body, function (err, content) {
       if (!err) {
-        content.should.eql({a: 1, b: 2});
+        content.should.eql(response);
+      }
+      done(err);
+    });
+  });
+
+  it("should handle xml-post", function (done) {
+    var fetch = fetchBuilder({httpMethod: "POST", contentType: "dontparse"});
+    var body = "<?xml version=\"1.0\" encoding=\"utf-8\"?><q>search</q>";
+    var responseBody = "<?xml version=\"1.0\" encoding=\"utf-8\"?><a>response</a>";
+
+    fakeResponse(path, body, responseBody);
+    fetch(host + path, body, function (err, content) {
+      if (!err) {
+        content.should.eql(responseBody);
       }
       done(err);
     });
@@ -41,13 +57,38 @@ describe("Posting", function () {
   it("should follow a redirect when posting", function (done) {
     var fetch = fetchBuilder({httpMethod: "POST"});
     var body = {q: "term"};
+    var response = {c: 1, d: 2};
     fakeRedirect("/someOtherPath", path);
-    fakeReponse(path, body);
+    fakeResponse(path, body, response);
     fetch(host + "/someOtherPath", body, function (err, content) {
       if (!err) {
-        content.should.eql({a: 1, b: 2});
+        content.should.eql(response);
       }
       done(err);
+    });
+
+  });
+
+  it("should cache on url and body by default", function (done) {
+    var fetch = fetchBuilder({httpMethod: "POST"});
+    var bodyOne = {q: "term"};
+    var responseOne = {a: 1, b: 2};
+    var bodyTwo = {q: "another world"};
+    var responseTwo = {c: 1, d: 2};
+
+    fakeResponse(path, bodyOne, responseOne);
+    fakeResponse(path, bodyTwo, responseTwo);
+
+    fetch(host + path, bodyOne, function (err, content) {
+      content.should.eql(responseOne);
+      fetch(host + path, bodyOne, function (err, content) {
+        content.should.eql(responseOne);
+
+        fetch(host + path, bodyTwo, function (err, content) {
+          content.should.eql(responseTwo);
+          done(err);
+        });
+      });
     });
 
   });

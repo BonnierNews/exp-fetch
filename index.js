@@ -2,33 +2,22 @@
 var request = require("request");
 var VError = require("verror");
 var AsyncCache = require("exp-asynccache");
+var Promise = require("bluebird");
+var Agent = require("forever-agent");
+var clone = require("clone");
+var util = require("util");
 
 var getMaxAge = require("./lib/maxAgeFromHeader.js");
 var dummyLogger = require("./lib/dummyLogger");
-var Promise = require("bluebird");
 var isNumber = require("./lib/isNumber");
 var dummyCache = require("./lib/dummyCache");
 var initCache = require("./lib/initCache");
-var Agent = require("forever-agent");
 var parseResponse = require("./lib/parseResponse");
-var clone = require("clone");
+var calculateCacheKey = require("./lib/calculateCacheKey");
+var isRedirect = require("./lib/isRedirect");
+var ensureAbsoluteUrl = require("./lib/ensureAbsoluteUrl");
 
-var util = require("util");
-var url = require("url");
 var passThrough = function (key) { return key; };
-
-function isRedirect(response) {
-  if (!response) return false;
-  //if (!response.caseless.has("location")) return false;
-
-  return response.statusCode >= 300 && response.statusCode < 400;
-}
-
-function ensureAbsoluteUrl(headers, uri) {
-  var path = url.parse(headers.location).path;
-  var parsed = url.parse(uri);
-  return util.format("%s//%s%s", parsed.protocol, parsed.host, path);
-}
 
 function buildFetch(behavior) {
   behavior = behavior || {};
@@ -36,7 +25,7 @@ function buildFetch(behavior) {
   // Options
   var freeze = true;
   var cache = new AsyncCache(initCache({age: 60}));
-  var cacheKeyFn = behavior.cacheKeyFn || passThrough;
+  var cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
   var cacheValueFn = behavior.cacheValueFn || passThrough;
   var maxAgeFn = behavior.maxAgeFn || passThrough;
   var onNotFound = behavior.onNotFound;
@@ -122,18 +111,21 @@ function buildFetch(behavior) {
   }
 
   function performRequest(url, body, redirectCount, callback, onRequestInit) {
-    var cacheKey = cacheKeyFn(url);
+    var cacheKey = cacheKeyFn(url, body);
     cache.lookup(cacheKey, function (resolvedCallback) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
       var options = {
         url: url,
         json: contentType === "json",
-        body: body,
         agent: keepAliveAgent,
         followRedirect: false,
         method: httpMethod
       };
+
+      if (body) {
+        options.body = body;
+      }
 
       if (onRequestInit && !onRequestInit.called) {
         var passOptions = {
@@ -174,12 +166,9 @@ function buildFetch(behavior) {
 
   // The main fetch function
   return function fetch(url, optionalBody, resultCallback) {
-    if (!optionalBody) {
-      optionalBody = "";
-    }
     if (typeof optionalBody === "function") {
       resultCallback = optionalBody;
-      optionalBody = "";
+      optionalBody = null;
     }
 
     var onRequestInit = function () {
