@@ -50,6 +50,7 @@ function buildFetch(behavior) {
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
+  var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
 
   if (behavior.hasOwnProperty("clone")) {
     performClone = !!behavior.clone;
@@ -120,7 +121,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performGet(url, redirectCount, callback, onRequestInit) {
+  function performRequest(url, body, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url);
     cache.lookup(cacheKey, function (resolvedCallback) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
@@ -128,27 +129,29 @@ function buildFetch(behavior) {
       var options = {
         url: url,
         json: contentType === "json",
+        body: body,
         agent: keepAliveAgent,
-        followRedirect: false
+        followRedirect: false,
+        method: httpMethod
       };
 
       if (onRequestInit && !onRequestInit.called) {
         var passOptions = {
           url: options.url,
           json: options.json,
+          method: options.method,
           followRedirect: followRedirect
         };
 
         onRequestInit(passOptions, cacheKey);
       }
-
-      request.get(options, function (err, res, content) {
+      request(options, function (err, res, content) {
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
 
         if (res.statusCode === 404) {
           return handleNotFound(url, cacheKey, res, content, resolvedCallback);
-        } else if (res.statusCode > 200) {
+        } else if (res.statusCode > 299) {
           return handleError(url, cacheKey, res, content, resolvedCallback);
         }
 
@@ -160,7 +163,7 @@ function buildFetch(behavior) {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
           var location = ensureAbsoluteUrl(response.headers, url);
-          return performGet(location, redirectCount, callback);
+          return performRequest(location, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
@@ -170,19 +173,27 @@ function buildFetch(behavior) {
   }
 
   // The main fetch function
-  return function fetch(url, resultCallback) {
-    var onRequestInit = function() {
+  return function fetch(url, optionalBody, resultCallback) {
+    if (!optionalBody) {
+      optionalBody = "";
+    }
+    if (typeof optionalBody === "function") {
+      resultCallback = optionalBody;
+      optionalBody = "";
+    }
+
+    var onRequestInit = function () {
       if (behavior.onRequestInit) {
         behavior.onRequestInit.apply(null, arguments);
-      } 
+      }
       onRequestInit.called = true;
     };
 
     if (resultCallback) {
-      performGet(url, 0, resultCallback, onRequestInit);
+      performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
     } else {
       return new Promise(function (resolve, reject) {
-        performGet(url, 0, function (err, content) {
+        performRequest(url, optionalBody, 0, function (err, content) {
           if (err) return reject(err);
           return resolve(content);
         }, onRequestInit);

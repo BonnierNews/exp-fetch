@@ -1,14 +1,9 @@
 "use strict";
 
-var chai = require("chai");
-var should = chai.should();
-//var Promise = require("bluebird");
-
 var fetchBuilder = require("../../.");
 var nock = require("nock");
 nock.disableNetConnect();
 nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
-//var util = require("util");
 
 describe("Fetching redirected resources", function () {
   var host = "http://example.com";

@@ -2,7 +2,6 @@
 
 var chai = require("chai");
 var should = chai.should();
-//var Promise = require("bluebird");
 
 var fetchBuilder = require("../../.");
 var nock = require("nock");
