@@ -17,6 +17,15 @@ describe("Posting", function () {
       .reply(200, {a: 1, b: 2});
   }
 
+  function fakeRedirect(from, to) {
+    fake
+      .post(from)
+      .reply(302, "", {
+        Location: to,
+        "cache-control": "no-cache"
+      });
+  }
+
   it("should make a post request", function (done) {
     var fetch = fetchBuilder({httpMethod: "POST"});
     var body = {q: "term"};
@@ -27,6 +36,20 @@ describe("Posting", function () {
       }
       done(err);
     });
+  });
+
+  it("should follow a redirect when posting", function (done) {
+    var fetch = fetchBuilder({httpMethod: "POST"});
+    var body = {q: "term"};
+    fakeRedirect("/someOtherPath", path);
+    fakeReponse(path, body);
+    fetch(host + "/someOtherPath", body, function (err, content) {
+      if (!err) {
+        content.should.eql({a: 1, b: 2});
+      }
+      done(err);
+    });
+
   });
 
 });
