@@ -50,7 +50,7 @@ fetch("http://example.com/resource.json").then(function (content) {
 * `agentOptions`: (default: `{}`), options passed to the keepAliveAgent.
 * `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
-* `httpMethod`: (default: "GET"), the HTTP-method that should be used to make requests. 
+* `httpMethod`: (default: `"GET"`), the HTTP-method that should be used to make requests. 
 
 #### CacheKeyFn
 
