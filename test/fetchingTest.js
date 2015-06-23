@@ -105,6 +105,14 @@ describe("fetch", function () {
       testStatus(200, "onSuccess", done);
     });
 
+    it("should call requestTimeFn", function (done) {
+      testStatus(200, "requestTimeFn", function () {
+        testStatus(404, "requestTimeFn", function () {
+          testStatus(500, "requestTimeFn", done);
+        });
+      });
+    });
+
     it("should call onRequestInit with request options", function (done) {
       var called = false;
       var behavior = {

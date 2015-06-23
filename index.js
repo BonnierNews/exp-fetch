@@ -41,6 +41,11 @@ function buildFetch(behavior) {
   var maximumNumberOfRedirects = 10;
   var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
 
+  function defaultRequestTimeFn(requestOptions, took) {
+    logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
+  }
+  var requestTimeFn = behavior.requestTimeFn || defaultRequestTimeFn;
+
   if (behavior.hasOwnProperty("clone")) {
     performClone = !!behavior.clone;
   }
@@ -112,7 +117,9 @@ function buildFetch(behavior) {
 
   function performRequest(url, body, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url, body);
-    cache.lookup(cacheKey, function (resolvedCallback) {
+    var startTime = new Date().getTime();
+
+    cache.lookup(cacheKey, function (resolveFunction) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
       var options = {
@@ -127,16 +134,22 @@ function buildFetch(behavior) {
         options.body = body;
       }
 
+      var passOptions = {
+        url: options.url,
+        json: options.json,
+        method: options.method,
+        followRedirect: followRedirect
+      };
       if (onRequestInit && !onRequestInit.called) {
-        var passOptions = {
-          url: options.url,
-          json: options.json,
-          method: options.method,
-          followRedirect: followRedirect
-        };
 
         onRequestInit(passOptions, cacheKey);
       }
+
+      function resolvedCallback(err, content, maxAge) {
+        requestTimeFn(passOptions, new Date().getTime() - startTime);
+        resolveFunction(err, content, maxAge);
+      }
+
       request(options, function (err, res, content) {
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
