@@ -32,6 +32,21 @@ fetch("http://example.com/resource.json").then(function (content) {
 });
 ```
 
+#### Issuing POST requests:
+
+```javascript
+var behavior = { httpMethod: "POST"};
+var poster = fetchBuilder(behavior);
+var body = {
+    "query": "some string" 
+};
+
+poster("http://example.com/query", body, function (err, content) {
+    // Do something with the result
+    // The result will be cached by `url` + ` ` + `sha of body`
+});
+```
+
 ### Allowed behavior options
 
 * `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
