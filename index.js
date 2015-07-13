@@ -40,7 +40,7 @@ function buildFetch(behavior) {
   var performClone = true;
   var maximumNumberOfRedirects = 10;
   var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
-  var timeout = behavior.timeout || 10000;
+  var timeout = behavior.timeout || 20000;
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
