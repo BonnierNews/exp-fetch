@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "scripts": {
