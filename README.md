@@ -97,7 +97,7 @@ var valueFn  = function (body, headers, statusCode) {
 var fetch = fetchBuilder({cacheValueFn: valueFn});
 fetch("http://example.com/resource.json", function (err, value) {
   // value will be something like:
-  // { statusCode: 200, header: { "content-type": "application/json" }, body: { "resource": "body" } }
+  // { statusCode: 200, headers: { "content-type": "application/json" }, body: { "resource": "body" } }
 })
 ```
 
