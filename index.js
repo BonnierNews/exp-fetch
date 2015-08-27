@@ -35,7 +35,7 @@ function buildFetch(behavior) {
   var logger = behavior.logger || dummyLogger();
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
-  var keepAliveAgent = new Agent(behavior.agentOptions || {});
+  var keepAliveAgent = behavior.disableForeverAgent ? null : new Agent(behavior.agentOptions || {});
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
@@ -126,11 +126,14 @@ function buildFetch(behavior) {
       var options = {
         url: url,
         json: contentType === "json",
-        agent: keepAliveAgent,
         followRedirect: false,
         method: httpMethod,
         timeout: timeout
       };
+
+      if (!behavior.disableKeepAliveAgent) {
+        options.agent = keepAliveAgent;
+      }
 
       if (body) {
         options.body = body;
@@ -140,8 +143,13 @@ function buildFetch(behavior) {
         url: options.url,
         json: options.json,
         method: options.method,
-        followRedirect: followRedirect
+        followRedirect: followRedirect,
       };
+
+      if (!behavior.disableKeepAliveAgent) {
+        passOptions.agent = options.agent;
+      }
+
       if (onRequestInit && !onRequestInit.called) {
 
         onRequestInit(passOptions, cacheKey);
