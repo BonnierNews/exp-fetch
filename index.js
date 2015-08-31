@@ -3,7 +3,6 @@ var request = require("request");
 var VError = require("verror");
 var AsyncCache = require("exp-asynccache");
 var Promise = require("bluebird");
-var Agent = require("forever-agent");
 var clone = require("clone");
 var util = require("util");
 
@@ -35,7 +34,7 @@ function buildFetch(behavior) {
   var logger = behavior.logger || dummyLogger();
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
-  var keepAliveAgent = new Agent(behavior.agentOptions || {});
+  var keepAliveAgent = behavior.agent;
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
