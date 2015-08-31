@@ -35,7 +35,7 @@ function buildFetch(behavior) {
   var logger = behavior.logger || dummyLogger();
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
-  var keepAliveAgent = new Agent(behavior.agentOptions || {});
+  var keepAliveAgent = behavior.agent;
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
