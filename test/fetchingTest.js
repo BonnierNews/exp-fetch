@@ -424,4 +424,46 @@ describe("fetch", function () {
       });
     });
   });
+
+  describe("forever-agent options", function () {
+    it("uses a forever-agent by default", function (done) {
+      var called = false;
+      var behavior = {
+        onRequestInit: function(options) {
+          should.exist(options.agent);
+
+          fake.get(path).reply(200, "{}", {"ContentType": "application/json"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err) {
+        if (err) return done(err);
+        called.should.eql(true);
+        done();
+      });
+    });
+
+    it("is possible to disable the forever-agent", function (done) {
+      var called = false;
+      var behavior = {
+        disableKeepAliveAgent: true,
+
+        onRequestInit: function(options) {
+          should.not.exist(options.agent);
+
+          fake.get(path).reply(200, "{}", {"ContentType": "application/json"});
+          called = true;
+        }
+      };
+
+      var fetch = fetchBuilder(behavior);
+      fetch(host + path, function (err) {
+        if (err) return done(err);
+        called.should.eql(true);
+        done();
+      });
+    });
+  });
 });
