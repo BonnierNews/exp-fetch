@@ -3,7 +3,6 @@ var request = require("request");
 var VError = require("verror");
 var AsyncCache = require("exp-asynccache");
 var Promise = require("bluebird");
-var Agent = require("forever-agent");
 var clone = require("clone");
 var util = require("util");
 
