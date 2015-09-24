@@ -3,9 +3,8 @@
 var chai = require("chai");
 var should = chai.should();
 var Promise = require("bluebird");
-
-var fetchBuilder = require("../.");
 var nock = require("nock");
+var fetchBuilder = require("../.");
 //var Log = require("log");
 nock.disableNetConnect();
 nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
@@ -18,7 +17,7 @@ describe("fetch", function () {
   afterEach(nock.cleanAll);
 
   it("should support callbacks and promises", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
     fetch(host + path, function (err, body) {
       body.should.eql({some: "content"});
@@ -31,7 +30,7 @@ describe("fetch", function () {
   });
 
   describe("Fetching a json endpoint", function () {
-    var fetch = fetchBuilder({clone:false});
+    var fetch = fetchBuilder({clone:false}).fetch;
 
     it("should should fetch an url", function (done) {
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
@@ -58,7 +57,7 @@ describe("fetch", function () {
     });
 
     it("should not freeze content if freeze is set to false", function (done) {
-      var localFetch = fetchBuilder({freeze:false, clone: false});
+      var localFetch = fetchBuilder({freeze:false, clone: false}).fetch;
       fake.get(path).times(2).reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(host + path, function (err, content) {
         should.throw(function () {
@@ -85,7 +84,7 @@ describe("fetch", function () {
       var behavior = {};
       behavior[callbackName] = eventCallback;
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fake.get(path).reply(statusCode, {}, {"cache-control": "no-cache"});
       fetch(host + path, function () {
         called.should.eql(true);
@@ -126,7 +125,7 @@ describe("fetch", function () {
         }
       };
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fetch(host + path, function (err) {
         if (err) return done(err);
         called.should.eql(true);
@@ -149,7 +148,7 @@ describe("fetch", function () {
         }
       };
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fetch(host + path, function (err, res) {
         if (err) return done(err);
         called.should.eql(true);
@@ -175,7 +174,7 @@ describe("fetch", function () {
         }
       };
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fetch(host + path, function (err) {
         if (err) return done(err);
         called.should.eql(true);
@@ -199,7 +198,7 @@ describe("fetch", function () {
         }
       };
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fetch(host + path, function (err) {
         if (err) return done(err);
         called = false;
@@ -223,7 +222,7 @@ describe("fetch", function () {
       fake.get("/parallel-1").delay(98).reply(200, {}, {"cache-control": "no-cache"});
       fake.get("/parallel-2").reply(200, {}, {"cache-control": "no-cache"});
 
-      var fetch = fetchBuilder(behavior);
+      var fetch = fetchBuilder(behavior).fetch;
       fetch(host + "/parallel-1", function (err) {
         if (err) return done(err);
         called.length.should.eql(2);
@@ -237,7 +236,7 @@ describe("fetch", function () {
 
   describe("Caching", function () {
     it("should cache by default", function (done) {
-      var fetch = fetchBuilder();
+      var fetch = fetchBuilder().fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -251,7 +250,7 @@ describe("fetch", function () {
     });
 
     it("should not cache if falsy cache is given", function (done) {
-      var fetch = fetchBuilder({cache: null});
+      var fetch = fetchBuilder({cache: null}).fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -270,7 +269,7 @@ describe("fetch", function () {
         return url.parse(key).path.replace(/\//g, "");
       }
 
-      var fetch = fetchBuilder({cacheKeyFn: cacheKeyFn});
+      var fetch = fetchBuilder({cacheKeyFn: cacheKeyFn}).fetch;
       Promise.all([
         fetch(host + path),
         fetch("http://other.expample.com" + path),
@@ -291,7 +290,7 @@ describe("fetch", function () {
           statusCode: statusCode
         };
       };
-      var fetch = fetchBuilder({cacheValueFn: valueFn});
+      var fetch = fetchBuilder({cacheValueFn: valueFn}).fetch;
       fetch(host + path, function (err, content) {
         content.should.eql({
           body: {some: "content"},
@@ -311,7 +310,7 @@ describe("fetch", function () {
         return -1;
       }
 
-      var fetch = fetchBuilder({maxAgeFn: maxAgeFn});
+      var fetch = fetchBuilder({maxAgeFn: maxAgeFn}).fetch;
       fetch(host + path).then(function (content) {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
         content.should.eql({some: "content"});
@@ -323,7 +322,7 @@ describe("fetch", function () {
     });
 
     it("should not cache 404s by default", function (done) {
-      var fetch = fetchBuilder();
+      var fetch = fetchBuilder().fetch;
       fake.get(path).reply(404);
       fetch(host + path, function () {
         fake.get(path).reply(200, {some: "content"});
@@ -335,7 +334,7 @@ describe("fetch", function () {
     });
 
     it("should cache 404s if it has cacheNotFound set", function (done) {
-      var fetch = fetchBuilder({cacheNotFound: 1000});
+      var fetch = fetchBuilder({cacheNotFound: 1000}).fetch;
       fake.get(path).reply(404);
       fetch(host + path, function () {
         fake.get(path).reply(200, {some: "content"});
@@ -354,7 +353,7 @@ describe("fetch", function () {
         return maxAge;
       }
 
-      var fetch = fetchBuilder({cacheNotFound: -1, maxAgeFn: maxAgeFn});
+      var fetch = fetchBuilder({cacheNotFound: -1, maxAgeFn: maxAgeFn}).fetch;
       fake.get(path).reply(404);
       fetch(host + path, function () {
         fake.get(path).reply(200, {some: "content"});
@@ -366,7 +365,7 @@ describe("fetch", function () {
     });
 
     it("should not cache errors with empty response", function (done) {
-      var fetch = fetchBuilder();
+      var fetch = fetchBuilder().fetch;
       fake.get(path).reply(500);
       fetch(host + path, function () {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
@@ -378,7 +377,7 @@ describe("fetch", function () {
     });
 
     it("should not return an error if errorOnRemoteError is false", function (done) {
-      var fetch = fetchBuilder({errorOnRemoteError: false});
+      var fetch = fetchBuilder({errorOnRemoteError: false}).fetch;
       fake.get(path).reply(500);
       fetch(host + path, function (err) {
         should.not.exist(err);
@@ -387,7 +386,7 @@ describe("fetch", function () {
     });
 
     it("should not cache errors with string response", function (done) {
-      var fetch = fetchBuilder();
+      var fetch = fetchBuilder().fetch;
       fake.get(path).reply(500, "Internal Error");
       fetch(host + path, function () {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
@@ -401,7 +400,7 @@ describe("fetch", function () {
 
   describe("contentType option", function () {
     it("should fetch json", function (done) {
-      var fetch = fetchBuilder({contentType: "json"});
+      var fetch = fetchBuilder({contentType: "json"}).fetch;
       fake.get(path).reply(200, {some: "content"});
       fetch(host + path, function (err, body) {
         body.should.eql({some: "content"});
@@ -410,7 +409,7 @@ describe("fetch", function () {
     });
 
     it("should fetch (and parse) xml", function (done) {
-      var fetch = fetchBuilder({contentType: "xml"});
+      var fetch = fetchBuilder({contentType: "xml"}).fetch;
       var xmlString = " <?xml version=\"1.0\" encoding=\"utf-8\"?><channel><title>Expressen: Nyheter</title><link>http://www.expressen.se/</link></channel>";
       fake.get(path).reply(200, xmlString, {"ContentType": "text/xml"});
       fetch(host + path, function (err, body) {

@@ -18,7 +18,7 @@ describe("Fetching redirected resources", function () {
   }
 
   it("should clone an object by default", function (done) {
-    var fetch = fetchBuilder({freeze: false});
+    var fetch = fetchBuilder({freeze: false}).fetch;
     fakeResponse(path);
     fetch(host + path, function (err, content) {
       content.should.eql({a: 1, b: 2});
@@ -31,7 +31,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should not clone an object if clone is set to false", function (done) {
-    var fetch = fetchBuilder({freeze: false, clone: false});
+    var fetch = fetchBuilder({freeze: false, clone: false}).fetch;
     fakeResponse(path);
     fetch(host + path, function (err, content) {
       content.should.eql({a: 1, b: 2});
@@ -54,7 +54,7 @@ describe("Fetching redirected resources", function () {
   }
 
   it("should clone redirects if followRedirect is set to false", function (done) {
-    var fetch = fetchBuilder({followRedirect: false, freeze: false});
+    var fetch = fetchBuilder({followRedirect: false, freeze: false}).fetch;
     fake
       .get(path)
       .reply(302, "", {
@@ -64,7 +64,7 @@ describe("Fetching redirected resources", function () {
     fetch(host + path, function (err, content) {
       if (err) return done(err);
       expected(content);
-      content.statusCode = 200
+      content.statusCode = 200;
       fetch(host + path, function (err, content) {
         if (err) return done(err);
         expected(content);
