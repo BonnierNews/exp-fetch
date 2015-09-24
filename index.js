@@ -180,39 +180,38 @@ function buildFetch(behavior) {
     });
   }
 
-  // The main fetch function
-  var ret = function fetch(url, optionalBody, resultCallback) {
-    if (typeof optionalBody === "function") {
-      resultCallback = optionalBody;
-      optionalBody = null;
-    }
-    var onRequestInit = function () {
-      if (behavior.onRequestInit) {
-        behavior.onRequestInit.apply(null, arguments);
+  return {
+    fetch: function (url, optionalBody, resultCallback) {
+      if (typeof optionalBody === "function") {
+        resultCallback = optionalBody;
+        optionalBody = null;
       }
-      onRequestInit.called = true;
-    };
+      var onRequestInit = function () {
+        if (behavior.onRequestInit) {
+          behavior.onRequestInit.apply(null, arguments);
+        }
+        onRequestInit.called = true;
+      };
 
-    if (resultCallback) {
-      performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
-    } else {
-      return new Promise(function (resolve, reject) {
-        performRequest(url, optionalBody, 0, function (err, content) {
-          if (err) return reject(err);
-          return resolve(content);
-        }, onRequestInit);
-      });
+      if (resultCallback) {
+        performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
+      } else {
+        return new Promise(function (resolve, reject) {
+          performRequest(url, optionalBody, 0, function (err, content) {
+            if (err) return reject(err);
+            return resolve(content);
+          }, onRequestInit);
+        });
+      }
+    },
+
+    stats: function () {
+      return {
+        calls: stats.calls,
+        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) /  stats.calls : 0
+      };
     }
   };
-
-  ret.stats = function () {
-    return {
-      calls: stats.calls,
-      cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) /  stats.calls : 0
-    };
-  };
-
-  return ret;
 
 }
 
