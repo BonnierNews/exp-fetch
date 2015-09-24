@@ -205,7 +205,12 @@ function buildFetch(behavior) {
     }
   };
 
-  ret.stats = stats;
+  ret.stats = function () {
+    return {
+      calls: stats.calls,
+      cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) /  stats.calls : 0
+    };
+  };
 
   return ret;
 

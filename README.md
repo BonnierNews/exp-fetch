@@ -170,3 +170,14 @@ var cache = new AsyncCache(initLRUCache({ age: 60, size: 2000});
 * `size` or `max`: the max allowed size, the unit is set by the `length` method. Default is `value.length`. Default: 2000000
 * `length`: the length function, default is `v && v.length || 1`
 * `age` or `maxAge`: the maximum number of seconds a key will be kept in the cache. Default `60`
+
+## Stats
+
+Get statistics for number calls and cache hit ratio:
+
+```javascript
+var behavior = {};
+var fetch = fetchBuilder(behavior);
+var stats = fetch.stats();
+console.log("Hit ration", stats.cacheHitRatio);
+```
