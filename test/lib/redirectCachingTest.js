@@ -25,7 +25,7 @@ describe("Fetching redirected resources", function () {
   }
 
   it("should cache redirects", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fakeRedirect(path, "/otherPath");
     fake.get("/otherPath").reply(200, {some: "content"});
     fetch(host + path, function (err, content) {
@@ -35,7 +35,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should handle get params", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fakeRedirect(path, "/otherPath?contentId=22");
     fake.get("/otherPath?contentId=11").reply(200, {some: "content11"});
     fake.get("/otherPath?contentId=22").reply(200, {some: "content22"});
@@ -46,7 +46,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should cache redirects on the destination url", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fakeRedirect(path, host + "/otherPath");
     fake.get("/otherPath").reply(200, {some: "content"});
     fetch(host + path, function (err, content) {
@@ -59,7 +59,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should only cache the redirection on the fromUrl", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fakeRedirect(path, host + "/otherPath");
     fake.get("/otherPath").reply(200, {some: "content"});
     fake.get("/otherPath2").reply(200, {some: "otherContent"});
@@ -74,7 +74,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should not follow redirects if followRedirect is set to false", function (done) {
-    var fetch = fetchBuilder({followRedirect: false});
+    var fetch = fetchBuilder({followRedirect: false}).fetch;
     fakeRedirect(path, host + "/otherPath");
     fetch(host + path, function (err, content) {
       if (err) return done(err);
@@ -91,7 +91,7 @@ describe("Fetching redirected resources", function () {
   });
 
   it("should only follow 10 redirects", function (done) {
-    var fetch = fetchBuilder();
+    var fetch = fetchBuilder().fetch;
     fake.get("/20").reply(200, {some: "content"});
     fakeRedirect(path, host + "/1");
     for (var i = 1; i < 20; i++) {

@@ -40,6 +40,7 @@ function buildFetch(behavior) {
   var maximumNumberOfRedirects = 10;
   var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
   var timeout = behavior.timeout || 20000;
+  var stats = {calls: 0, misses: 0};
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
@@ -118,8 +119,9 @@ function buildFetch(behavior) {
   function performRequest(url, body, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url, body);
     var startTime = new Date().getTime();
-
+    stats.calls++;
     cache.lookup(cacheKey, function (resolveFunction) {
+      stats.misses++;
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
       var options = {
@@ -178,29 +180,36 @@ function buildFetch(behavior) {
     });
   }
 
-  // The main fetch function
-  return function fetch(url, optionalBody, resultCallback) {
-    if (typeof optionalBody === "function") {
-      resultCallback = optionalBody;
-      optionalBody = null;
-    }
-
-    var onRequestInit = function () {
-      if (behavior.onRequestInit) {
-        behavior.onRequestInit.apply(null, arguments);
+  return {
+    fetch: function (url, optionalBody, resultCallback) {
+      if (typeof optionalBody === "function") {
+        resultCallback = optionalBody;
+        optionalBody = null;
       }
-      onRequestInit.called = true;
-    };
+      var onRequestInit = function () {
+        if (behavior.onRequestInit) {
+          behavior.onRequestInit.apply(null, arguments);
+        }
+        onRequestInit.called = true;
+      };
 
-    if (resultCallback) {
-      performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
-    } else {
-      return new Promise(function (resolve, reject) {
-        performRequest(url, optionalBody, 0, function (err, content) {
-          if (err) return reject(err);
-          return resolve(content);
-        }, onRequestInit);
-      });
+      if (resultCallback) {
+        performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
+      } else {
+        return new Promise(function (resolve, reject) {
+          performRequest(url, optionalBody, 0, function (err, content) {
+            if (err) return reject(err);
+            return resolve(content);
+          }, onRequestInit);
+        });
+      }
+    },
+
+    stats: function () {
+      return {
+        calls: stats.calls,
+        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) /  stats.calls : 0
+      };
     }
   };
 

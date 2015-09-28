@@ -3,7 +3,7 @@
 var initCache = require("../../lib/initCache");
 var should = require("chai").should();
 var wrap = function (value) {
-  return function () {return value;}
+  return function () {return value;};
 };
 
 describe("initCache", function () {
