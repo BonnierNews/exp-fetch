@@ -100,6 +100,7 @@ describe("fetch", function () {
     it("should call onError if responseCode > 200", function (done) {
       testStatus(500, "onError", done);
     });
+
     it("should call onSuccess if responseCode === 200 and content", function (done) {
       testStatus(200, "onSuccess", done);
     });
@@ -319,6 +320,16 @@ describe("fetch", function () {
           done();
         }, done);
       }, done);
+    });
+
+    it("should cache with a custom maxAgeFn on errors", function (done) {
+      fake.get(path).reply(503, {some: "content"}, {"cache-control": "max-age=30"});
+      function maxAgeFn(maxAge /*, key, headers, content */) {
+        return done();
+      }
+
+      var fetch = fetchBuilder({maxAgeFn: maxAgeFn, errorOnRemoteError: false}).fetch;
+      return fetch(host + path);
     });
 
     it("should not cache 404s by default", function (done) {
