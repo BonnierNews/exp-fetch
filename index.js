@@ -87,11 +87,14 @@ function buildFetch(behavior) {
 
   function handleError(url, cacheKey, res, content, resolvedCallback) {
     logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
+    var errorAge = -1;
+
     if (onError) {
       onError(url, cacheKey, res, content);
     }
     var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content)) : null;
-    return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode));
+    errorAge = maxAgeFn(errorAge, cacheKey, res, content);
+    return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
   }
 
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
