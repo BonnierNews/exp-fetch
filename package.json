@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
+  "engines" : { "node" : ">=0.11.0" },
   "scripts": {
     "test": "mocha test"
   },
