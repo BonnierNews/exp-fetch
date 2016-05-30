@@ -119,7 +119,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performRequest(url, body, redirectCount, callback, onRequestInit) {
+  function performRequest(url, headers, body, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url, body);
     var startTime = new Date().getTime();
     stats.calls++;
@@ -133,7 +133,8 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false,
         method: httpMethod,
-        timeout: timeout
+        timeout: timeout,
+        headers: headers
       };
 
       if (body) {
@@ -144,7 +145,8 @@ function buildFetch(behavior) {
         url: options.url,
         json: options.json,
         method: options.method,
-        followRedirect: followRedirect
+        followRedirect: followRedirect,
+        headers: options.headers
       };
       if (onRequestInit && !onRequestInit.called) {
 
@@ -174,7 +176,7 @@ function buildFetch(behavior) {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
           var location = ensureAbsoluteUrl(response.headers, url);
-          return performRequest(location, body, redirectCount, callback);
+          return performRequest(location, headers, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
@@ -184,7 +186,18 @@ function buildFetch(behavior) {
   }
 
   return {
-    fetch: function (url, optionalBody, resultCallback) {
+    fetch: function (options, optionalBody, resultCallback) {
+      var url = options;
+      var headers = {};
+      if (typeof options === "object") {
+        if (options.url) {
+          url = options.url;
+        }
+        if (options.headers) {
+          headers = options.headers;
+        }
+      }
+
       if (typeof optionalBody === "function") {
         resultCallback = optionalBody;
         optionalBody = null;
@@ -197,10 +210,10 @@ function buildFetch(behavior) {
       };
 
       if (resultCallback) {
-        performRequest(url, optionalBody, 0, resultCallback, onRequestInit);
+        performRequest(url, headers, optionalBody, 0, resultCallback, onRequestInit);
       } else {
         return new Promise(function (resolve, reject) {
-          performRequest(url, optionalBody, 0, function (err, content) {
+          performRequest(url, headers, optionalBody, 0, function (err, content) {
             if (err) return reject(err);
             return resolve(content);
           }, onRequestInit);
