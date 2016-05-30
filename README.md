@@ -5,7 +5,7 @@ fetch
 A small and pluggable lib to fetch a resource and cache the result.
 
 ### Usage
-By default fetch will treat all response codes expect 200 and 404 as errors. 404 will yield `null` and 200 the body
+By default fetch will treat all response codes except 200 and 404 as errors. 404 will yield `null` and 200 the body.
 
 #### Caching
 
