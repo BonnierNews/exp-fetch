@@ -32,6 +32,22 @@ fetch("http://example.com/resource.json").then(function (content) {
 });
 ```
 
+#### Custom request headers
+
+```javascript
+var behavior = {};
+var fetch = fetchBuilder(behavior);
+var options = {
+  url: "http://example.com/resource.json",
+  headers: {
+    "User-agent": "exp-fetch"
+  }
+}
+fetch(options, function (err, content) {
+    // Do something with the result
+});
+```
+
 #### Issuing POST requests:
 
 ```javascript

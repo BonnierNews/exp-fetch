@@ -52,6 +52,18 @@ describe("fetch", function () {
       });
     });
 
+    it("should be able to pass on request headers in promises", function (done) {
+      fake.get(path).matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      var options = {
+        url: host + path, 
+        headers: { "User-Agent": "request"}
+      }
+      fetch(options).then(function (body) {
+        body.should.eql({some: "content"});
+        done();
+      });
+    });
+
     it("should pass request headers on to redirects", function (done) {
       fake.get(path).reply(301, {}, {"cache-control": "no-cache", "location": "http://example.com/testing321"});
       fake.get("/testing321").matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
