@@ -15,8 +15,9 @@ it will respect the `max-age` header.
 #### Callback usage:
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var behavior = {};
-var fetch = fetchBuilder(behavior);
+var fetch = fetchBuilder(behavior).fetch;
 fetch("http://example.com/resource.json", function (err, content) {
     // Do something with the result
 });
@@ -25,8 +26,9 @@ fetch("http://example.com/resource.json", function (err, content) {
 #### Promise usage:
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var behavior = {};
-var fetch = fetchBuilder(behavior);
+var fetch = fetchBuilder(behavior).fetch;
 fetch("http://example.com/resource.json").then(function (content) {
     // Do something with the result
 });
@@ -35,8 +37,9 @@ fetch("http://example.com/resource.json").then(function (content) {
 #### Custom request headers
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var behavior = {};
-var fetch = fetchBuilder(behavior);
+var fetch = fetchBuilder(behavior).fetch;
 var options = {
   url: "http://example.com/resource.json",
   headers: {
@@ -51,8 +54,9 @@ fetch(options, function (err, content) {
 #### Issuing POST requests:
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var behavior = { httpMethod: "POST"};
-var poster = fetchBuilder(behavior);
+var poster = fetchBuilder(behavior).fetch;
 var body = {
     "query": "some string" 
 };
@@ -87,10 +91,11 @@ poster("http://example.com/query", body, function (err, content) {
 #### CacheKeyFn
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var keyFinder = function (url) {
     return url.replace(/\//g, "");
 }
-var fetch = fetchBuilder({cacheKeyFn: keyFinder});
+var fetch = fetchBuilder({cacheKeyFn: keyFinder}).fetch;
 Promise.all([
    fetch("http://example.com/foo/bar")
    fetch("http://example.com/foobar")
@@ -103,6 +108,7 @@ Promise.all([
 
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var valueFn  = function (body, headers, statusCode) {
     return {
         body: body,
@@ -110,7 +116,7 @@ var valueFn  = function (body, headers, statusCode) {
         statusCode: statusCode
     };
 }
-var fetch = fetchBuilder({cacheValueFn: valueFn});
+var fetch = fetchBuilder({cacheValueFn: valueFn}).fetch;
 fetch("http://example.com/resource.json", function (err, value) {
   // value will be something like:
   // { statusCode: 200, headers: { "content-type": "application/json" }, body: { "resource": "body" } }
@@ -120,10 +126,11 @@ fetch("http://example.com/resource.json", function (err, value) {
 #### maxAgeFn
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 function cacheNothing(maxAge, key, res, content) {
     return -1;
 }
-var fetch = fetchBuilder({maxAgeFn: cacheNothing});
+var fetch = fetchBuilder({maxAgeFn: cacheNothing}).fetch;
 ```
 
 #### Hooks
@@ -160,7 +167,7 @@ function onRequestInit(requestOptions, cacheKey) {
     nock(host).get(path).reply(200, {mock: true});
 }
 
-var fetch = fetchBuilder({onRequestInit: onRequestInit});
+var fetch = fetchBuilder({onRequestInit: onRequestInit}).fetch;
 ```
 
 And `requestTimeFn` with signature:
@@ -193,7 +200,6 @@ Get statistics for number calls and cache hit ratio:
 
 ```javascript
 var behavior = {};
-var fetch = fetchBuilder(behavior);
-var stats = fetch.stats();
-console.log("Hit ration", stats.cacheHitRatio);
+var stats = fetchBuilder(behavior).stats;
+console.log("Hit ratio", stats().cacheHitRatio);
 ```
