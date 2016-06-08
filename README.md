@@ -199,6 +199,7 @@ var cache = new AsyncCache(initLRUCache({ age: 60, size: 2000});
 Get statistics for number calls and cache hit ratio:
 
 ```javascript
+var fetchBuilder = require("exp-fetch");
 var behavior = {};
 var stats = fetchBuilder(behavior).stats;
 console.log("Hit ratio", stats().cacheHitRatio);
