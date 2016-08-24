@@ -23,6 +23,7 @@ function buildFetch(behavior) {
 
   // Options
   var freeze = true;
+  var deepFreeze = false;
   var cache = new AsyncCache(initCache({age: 60}));
   var cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
   var cacheValueFn = behavior.cacheValueFn || passThrough;
@@ -53,6 +54,10 @@ function buildFetch(behavior) {
 
   if (behavior.hasOwnProperty("freeze")) {
     freeze = !!behavior.freeze;
+  }
+
+  if (behavior.hasOwnProperty("deepFreeze")) {
+    deepFreeze = !!behavior.deepFreeze;
   }
 
   if (behavior.hasOwnProperty("followRedirect")) {
@@ -97,11 +102,31 @@ function buildFetch(behavior) {
     return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
   }
 
+  function deepFreezeObj(obj) {
+    var propNames = Object.getOwnPropertyNames(obj);
+
+    propNames.forEach(function(name) {
+      var prop = obj[name];
+
+      if (typeof prop === "object" && prop !== null) {
+        deepFreezeObj(prop);
+      }
+    });
+
+    return Object.freeze(obj);
+  }
+
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
     var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, content);
-    if (freeze && typeof content === "object") {
+
+    var contentType = typeof content;
+
+    if (deepFreeze && contentType === "object") {
+      deepFreezeObj(content);
+    } else if (freeze && contentType === "object") {
       Object.freeze(content);
     }
+
     if (onSuccess) {
       onSuccess(url, cacheKey, res, content);
     }
