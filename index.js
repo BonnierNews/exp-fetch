@@ -105,7 +105,7 @@ function buildFetch(behavior) {
   function deepFreezeObj(obj) {
     var propNames = Object.getOwnPropertyNames(obj);
 
-    propNames.forEach((name) => {
+    propNames.forEach(function(name) {
       var prop = obj[name];
 
       if (typeof prop === "object" && prop !== null) {
