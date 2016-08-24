@@ -70,6 +70,7 @@ poster("http://example.com/query", body, function (err, content) {
 ### Allowed behavior options
 
 * `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
+* `deepFreeze`: (default:`false`). When this option is set to true it will freeze the response _recursively_ so that it or any objects it contains can't be modified. ("use strict" is needed)
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url + sha1 of the body) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
@@ -87,6 +88,10 @@ poster("http://example.com/query", body, function (err, content) {
 * `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
 * `httpMethod`: (default: `"GET"`), the HTTP-method that should be used to make requests. 
+
+The difference between `freeze` and `deepFreeze` is that `deepFreeze` walks the object graph and freezes any
+child objects in the retrieved data. `freeze` only freezes the root object but still allows modifications
+to nested objects. `deepFreeze` will be slower since it is recursive.
 
 #### CacheKeyFn
 
