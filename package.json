@@ -1,9 +1,11 @@
 {
   "name": "exp-fetch",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
-  "engines" : { "node" : ">=0.11.0" },
+  "engines": {
+    "node": ">=0.11.0"
+  },
   "scripts": {
     "test": "mocha test"
   },
