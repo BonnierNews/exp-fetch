@@ -15,6 +15,7 @@ var parseResponse = require("./lib/parseResponse");
 var calculateCacheKey = require("./lib/calculateCacheKey");
 var isRedirect = require("./lib/isRedirect");
 var ensureAbsoluteUrl = require("./lib/ensureAbsoluteUrl");
+var currentAppConfig = require("./lib/currentAppConfig");
 
 var passThrough = function (key) { return key; };
 
@@ -221,6 +222,10 @@ function buildFetch(behavior) {
         if (options.headers) {
           headers = options.headers;
         }
+      }
+
+      if (currentAppConfig.name) {
+        headers["x-exp-fetch-appname"] = currentAppConfig.name;
       }
 
       if (typeof optionalBody === "function") {
