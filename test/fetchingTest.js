@@ -486,4 +486,15 @@ describe("fetch", function () {
       });
     });
   });
+
+  describe("app name header", function () {
+    it("should include app name from package.json", function (done) {
+      var fetch = fetchBuilder({contentType: "json"}).fetch;
+      fake.get(path).reply(function () {
+        this.req.headers['x-exp-fetch-appname'].should.eql("exp-fetch");
+        done();
+      });
+      fetch(host + path);
+    });
+  });
 });
