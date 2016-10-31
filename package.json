@@ -34,7 +34,7 @@
     "exp-asynccache": "^1.1.0",
     "log": "^1.4.0",
     "lru-cache": "^2.6.4",
-    "request": "^2.55.0",
+    "request": "2.75.0",
     "verror": "^1.6.0",
     "xml2js": "^0.4.8"
   }
