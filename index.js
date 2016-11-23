@@ -120,14 +120,7 @@ function buildFetch(behavior) {
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
     var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, content);
 
-    var contentType = typeof content;
-
-    if (deepFreeze && contentType === "object") {
-      deepFreezeObj(content);
-    } else if (freeze && contentType === "object") {
-      Object.freeze(content);
-    }
-
+    content = transformResponse(content, false);
     if (onSuccess) {
       onSuccess(url, cacheKey, res, content);
     }
@@ -144,6 +137,22 @@ function buildFetch(behavior) {
     };
     return resolvedCallback(null, content, maxAge);
   }
+
+  function transformResponse(response, shouldClone) {
+    if (!response) return response;
+
+    var content = (shouldClone ? clone(response) : response);
+    var contentType = typeof content;
+
+    if (deepFreeze && contentType === "object") {
+      deepFreezeObj(content);
+    } else if (freeze && contentType === "object" && !Object.isFrozen(content)) {
+      Object.freeze(content);
+    }
+
+    return content;
+  }
+
 
   function performRequest(url, headers, body, redirectCount, callback, onRequestInit) {
     var cacheKey = cacheKeyFn(url, body);
@@ -207,7 +216,8 @@ function buildFetch(behavior) {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
       }
-      callback(err, (performClone ? clone(response) : response));
+
+      callback(err, transformResponse(response, performClone));
     });
   }
 

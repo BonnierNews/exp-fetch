@@ -92,37 +92,6 @@ describe("fetch", function () {
         done();
       });
     });
-
-    it("should not freeze content if freeze is set to false", function (done) {
-      var localFetch = fetchBuilder({freeze:false, clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
-      localFetch(host + path, function (err, content) {
-        Object.isFrozen(content).should.be.false;
-        Object.isFrozen(content.child).should.be.false;
-        done(err);
-      });
-    });
-
-    it("should freeze the result root but not descendants by default", function (done) {
-      var localFetch = fetchBuilder({clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
-      localFetch(host + path, function (err, content) {
-        Object.isFrozen(content).should.be.true;
-        Object.isFrozen(content.child).should.be.false;
-        done(err);
-      });
-    });
-
-
-    it("should freeze objects recursively if deepFreeze is set to true", function (done) {
-      var localFetch = fetchBuilder({deepFreeze:true, clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
-      localFetch(host + path, function (err, content) {
-        Object.isFrozen(content).should.be.true;
-        Object.isFrozen(content.child).should.be.true;
-        done(err);
-      });
-    });
   });
 
   describe("Hooks", function () {
@@ -381,7 +350,7 @@ describe("fetch", function () {
       }
 
       var fetch = fetchBuilder({maxAgeFn: maxAgeFn, errorOnRemoteError: false}).fetch;
-      return fetch(host + path);
+      fetch(host + path);
     });
 
     it("should not cache 404s by default", function (done) {
