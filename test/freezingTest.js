@@ -119,7 +119,7 @@ describe("Freezing of result", function() {
           has: cache.has.bind(cache)
         };
       }
-    it("should return frozed objects if freeze is set to true", (done) => {
+    it("should return frozed objects if freeze is set to true", function(done) {
       var cloningCache = fakeRemoteCache();
       var cache = new AsyncCache(cloningCache);
       var localFetch = fetchBuilder({freeze: true, cache: cache, clone: false}).fetch;
@@ -134,7 +134,7 @@ describe("Freezing of result", function() {
       });
     });
 
-    it("should return a deep frozed objects if deepFreeze is set to true", (done) => {
+    it("should return a deep frozed objects if deepFreeze is set to true", function(done) {
       var cloningCache = fakeRemoteCache();
       var cache = new AsyncCache(cloningCache);
       var localFetch = fetchBuilder({deepFreeze: true, cache: cache, clone: false}).fetch;
