@@ -497,4 +497,70 @@ describe("fetch", function () {
       fetch(host + path);
     });
   });
+
+  describe("timeout", function () {
+    it("should honor timeout set in behavior", function(done) {
+      var fetch = fetchBuilder({
+        timeout: 10
+      }).fetch;
+      fake
+        .get(path)
+        .socketDelay(600)
+        .reply(200, {some: "content"});
+      fetch(host + path, function (err, body) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
+    it("should allow overriding behavior timeout per request", function(done) {
+      var fetch = fetchBuilder({
+        timeout: 200
+      }).fetch;
+      fake
+        .get(path)
+        .socketDelay(30)
+        .reply(200, {some: "content"});
+      fetch({url: host + path, timeout: 1}, function (err, body) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
+    it("should allow overriding behavior timeout per request when following redirects", function(done) {
+      var fetch = fetchBuilder({
+        timeout: 200
+      }).fetch;
+      fake
+        .get(path)
+        .reply(301, null, {location: host + "/someotherpath"});
+
+      fake
+        .get("/someotherpath")
+        .socketDelay(30)
+        .reply(200, {some: "content"});
+      fetch({url: host + path, timeout: 1}, function (err, body) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
+    it("should allow overriding behavior timeout per request when using promises", function(done) {
+      var fetch = fetchBuilder({
+        timeout: 200
+      }).fetch;
+      fake
+        .get(path)
+        .socketDelay(30)
+        .reply(200, {some: "content"});
+      fetch({url: host + path, timeout: 1}).catch(function (err) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+  });
 });
