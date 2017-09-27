@@ -381,7 +381,7 @@ describe("fetch", function () {
       }
 
       var fetch = fetchBuilder({maxAgeFn: maxAgeFn, errorOnRemoteError: false}).fetch;
-      return fetch(host + path);
+      fetch(host + path);
     });
 
     it("should not cache 404s by default", function (done) {
