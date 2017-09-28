@@ -13,6 +13,10 @@ describe("maxAgeFromHeader", function () {
     maxAgeFromHeader("private, max-age=30").should.eql(-1);
   });
 
+  it("should not return -1 if cache headers contains both public and private", function () {
+    maxAgeFromHeader("public, private, max-age=30").should.not.eql(-1);
+  });
+
   it("should return -1 (no cache) if cache headers contains no-cache", function () {
     maxAgeFromHeader("no-cache, max-age=30").should.eql(-1);
   });
