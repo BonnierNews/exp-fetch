@@ -579,7 +579,6 @@ describe("fetch", function () {
         .matchHeader("User-Agent", "request")
         .matchHeader("X-Test", "test")
         .reply(200, {some: "content"}, {"cache-control": "no-cache"});
-
       fetch(options, function (err, body) {
         body.should.eql({some: "content"});
         done(err);
@@ -590,6 +589,7 @@ describe("fetch", function () {
     it("should be able to pass on request headers in promises", function (done) {
       fake.get(path)
         .matchHeader("User-Agent", "request")
+        .matchHeader("X-Test", "test")
         .reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(options).then(function (body) {
         body.should.eql({some: "content"});
@@ -602,6 +602,7 @@ describe("fetch", function () {
         .reply(301, {}, {"cache-control": "no-cache", "location": "http://example.com/testing321"});
       fake.get("/testing321")
         .matchHeader("User-Agent", "request")
+        .matchHeader("X-Test", "test")
         .reply(200, {some: "content"}, {"cache-control": "no-cache"});
       fetch(options, function (err, body) {
         body.should.eql({some: "content"});
@@ -614,9 +615,10 @@ describe("fetch", function () {
         .matchHeader("User-Agent", "local-request")
         .reply(200, {some: "content"}, {"cache-control": "no-cache"});
       options.headers = { "User-Agent" : "local-request"};
-      fetch(options).then(function (body) {
+      fetch(options, function (err, body) {
+        console.log(err);
         body.should.eql({some: "content"});
-        done();
+        done(err);
       });
     });
   });
