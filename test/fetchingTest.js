@@ -43,7 +43,7 @@ describe("fetch", function () {
     it("should be able to pass on request headers", function (done) {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
-        url: host + path, 
+        url: host + path,
         headers: { "User-Agent": "request"}
       }
       fetch(options, function (err, body) {
@@ -55,7 +55,7 @@ describe("fetch", function () {
     it("should be able to pass on request headers in promises", function (done) {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
-        url: host + path, 
+        url: host + path,
         headers: { "User-Agent": "request"}
       }
       fetch(options).then(function (body) {
@@ -68,7 +68,7 @@ describe("fetch", function () {
       fake.get(path).reply(301, {}, {"cache-control": "no-cache", "location": "http://example.com/testing321"});
       fake.get("/testing321").matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
-        url: host + path, 
+        url: host + path,
         headers: { "User-Agent": "request"}
       }
       fetch(options, function (err, body) {
@@ -560,6 +560,65 @@ describe("fetch", function () {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
         done();
+      });
+    });
+  });
+
+  describe("Global header", function() {
+    const fetch = fetchBuilder({
+        headers: { "User-Agent": "request"}
+    }).fetch;
+
+    const options = {
+      url: host + path,
+      headers: {"X-Test": "test"}
+    };
+
+    it("should pass through global headers and local headers", function(done) {
+      fake.get(path)
+        .matchHeader("User-Agent", "request")
+        .matchHeader("X-Test", "test")
+        .reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      fetch(options, function (err, body) {
+        body.should.eql({some: "content"});
+        done(err);
+      });
+    });
+
+
+    it("should be able to pass on request headers in promises", function (done) {
+      fake.get(path)
+        .matchHeader("User-Agent", "request")
+        .matchHeader("X-Test", "test")
+        .reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      fetch(options).then(function (body) {
+        body.should.eql({some: "content"});
+        done();
+      });
+    });
+
+    it("should pass request headers on to redirects", function (done) {
+      fake.get(path)
+        .reply(301, {}, {"cache-control": "no-cache", "location": "http://example.com/testing321"});
+      fake.get("/testing321")
+        .matchHeader("User-Agent", "request")
+        .matchHeader("X-Test", "test")
+        .reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      fetch(options, function (err, body) {
+        body.should.eql({some: "content"});
+        done(err);
+      });
+    });
+
+    it("should make sure local headers take precedence over global", function (done) {
+      fake.get(path)
+        .matchHeader("User-Agent", "local-request")
+        .reply(200, {some: "content"}, {"cache-control": "no-cache"});
+      options.headers = { "User-Agent" : "local-request"};
+      fetch(options, function (err, body) {
+        console.log(err);
+        body.should.eql({some: "content"});
+        done(err);
       });
     });
   });

@@ -43,6 +43,7 @@ function buildFetch(behavior) {
   var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
   var timeout = behavior.timeout || 20000;
   var stats = {calls: 0, misses: 0};
+  var globalHeaders = behavior.headers || {};
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
@@ -214,14 +215,11 @@ function buildFetch(behavior) {
   return {
     fetch: function (options, optionalBody, resultCallback) {
       var url = options;
-      var headers = {};
+      var headers = Object.assign({}, globalHeaders, options.headers);
       var explicitTimeout = null;
       if (typeof options === "object") {
         if (options.url) {
           url = options.url;
-        }
-        if (options.headers) {
-          headers = options.headers;
         }
         if (options.timeout) {
           explicitTimeout = options.timeout;
