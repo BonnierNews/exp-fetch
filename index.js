@@ -38,6 +38,7 @@ function buildFetch(behavior) {
   var contentType = (behavior.contentType || "json").toLowerCase();
   var keepAliveAgent = behavior.agent;
   var followRedirect = true;
+  var rejectUnauthorized = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
   var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
@@ -64,6 +65,10 @@ function buildFetch(behavior) {
 
   if (behavior.hasOwnProperty("followRedirect")) {
     followRedirect = !!behavior.followRedirect;
+  }
+
+  if (behavior.hasOwnProperty("rejectUnauthorized")) {
+    rejectUnauthorized = !!behavior.rejectUnauthorized;
   }
 
   if (behavior.hasOwnProperty("errorOnRemoteError")) {
@@ -159,6 +164,7 @@ function buildFetch(behavior) {
         json: contentType === "json",
         agent: keepAliveAgent,
         followRedirect: false,
+        rejectUnauthorized: rejectUnauthorized,
         method: httpMethod,
         timeout: explicitTimeout || timeout,
         headers: headers
@@ -173,6 +179,7 @@ function buildFetch(behavior) {
         json: options.json,
         method: options.method,
         followRedirect: followRedirect,
+        rejectUnauthorized: rejectUnauthorized,
         headers: options.headers
       };
       if (onRequestInit && !onRequestInit.called) {
