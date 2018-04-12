@@ -146,7 +146,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performRequest(url, headers, explicitTimeout, body, redirectCount, callback, onRequestInit) {
+  function performRequest(url, headers, explicitTimeout, body, redirectCount, callback, onRequestInit, context) {
     var cacheKey = cacheKeyFn(url, body);
     var startTime = new Date().getTime();
     stats.calls++;
@@ -173,7 +173,8 @@ function buildFetch(behavior) {
         json: options.json,
         method: options.method,
         followRedirect: followRedirect,
-        headers: options.headers
+        headers: options.headers,
+        context
       };
       if (onRequestInit && !onRequestInit.called) {
 
@@ -242,13 +243,13 @@ function buildFetch(behavior) {
       };
 
       if (resultCallback) {
-        performRequest(url, headers, explicitTimeout, optionalBody, 0, resultCallback, onRequestInit);
+        performRequest(url, headers, explicitTimeout, optionalBody, 0, resultCallback, onRequestInit, options.context);
       } else {
         return new Promise(function (resolve, reject) {
           performRequest(url, headers, explicitTimeout, optionalBody, 0, function (err, content) {
             if (err) return reject(err);
             return resolve(content);
-          }, onRequestInit);
+          }, onRequestInit, options.context);
         });
       }
     },
