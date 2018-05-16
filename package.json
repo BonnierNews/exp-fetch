@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "engines": {
@@ -23,22 +23,19 @@
     "url": "https://github.com/ExpressenAB/exp-fetch/issues"
   },
   "homepage": "https://github.com/ExpressenAB/exp-fetch",
-  "engines": {
-    "node": ">=4"
-  },
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^3.5.3",
+    "mocha": "^5.1.1",
     "nock": "^9.0.21"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
     "clone": "^2.1.1",
-    "exp-asynccache": "^1.1.0",
+    "exp-asynccache": "^1.2.1",
     "log": "^1.4.0",
     "lru-cache": "^4.1.1",
-    "request": "2.83.0",
-    "verror": "^1.6.0",
-    "xml2js": "^0.4.8"
+    "request": "^2.86.0",
+    "verror": "^1.10.0",
+    "xml2js": "^0.4.19"
   }
 }
