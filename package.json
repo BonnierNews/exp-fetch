@@ -1,13 +1,13 @@
 {
   "name": "exp-fetch",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "engines": {
-    "node": ">=0.11.0"
+    "node": ">=8"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha -R dot && eslint . --cache"
   },
   "repository": {
     "type": "git",
@@ -25,16 +25,16 @@
   "homepage": "https://github.com/ExpressenAB/exp-fetch",
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^5.1.1",
-    "nock": "^9.0.21"
+    "eslint": "^5.3.0",
+    "mocha": "^5.2.0",
+    "nock": "^9.6.1"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
     "clone": "^2.1.1",
     "exp-asynccache": "^1.2.1",
     "log": "^1.4.0",
     "lru-cache": "^4.1.1",
-    "request": "^2.86.0",
+    "request": "^2.88.0",
     "verror": "^1.10.0",
     "xml2js": "^0.4.19"
   }
