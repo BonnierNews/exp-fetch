@@ -1,9 +1,7 @@
 "use strict";
 
-var fetchBuilder = require("../index.js");
-var nock = require("nock");
-nock.disableNetConnect();
-nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
+const fetchBuilder = require("../index.js");
+const nock = require("nock");
 
 describe("Posting", function () {
   var host = "http://example.com";
@@ -79,14 +77,14 @@ describe("Posting", function () {
     fakeResponse(path, bodyOne, responseOne);
     fakeResponse(path, bodyTwo, responseTwo);
 
-    fetch(host + path, bodyOne, function (err, content) {
-      content.should.eql(responseOne);
-      fetch(host + path, bodyOne, function (err, content) {
-        content.should.eql(responseOne);
+    fetch(host + path, bodyOne, function (_err0, content0) {
+      content0.should.eql(responseOne);
+      fetch(host + path, bodyOne, function (_err1, content1) {
+        content1.should.eql(responseOne);
 
-        fetch(host + path, bodyTwo, function (err, content) {
-          content.should.eql(responseTwo);
-          done(err);
+        fetch(host + path, bodyTwo, function (_err2, content2) {
+          content2.should.eql(responseTwo);
+          done(_err2);
         });
       });
     });
