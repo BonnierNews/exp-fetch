@@ -2,8 +2,6 @@
 
 var fetchBuilder = require("../../.");
 var nock = require("nock");
-nock.disableNetConnect();
-nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
 
 describe("Fetching redirected resources", function () {
   var host = "http://example.com";
@@ -20,11 +18,11 @@ describe("Fetching redirected resources", function () {
   it("should clone an object by default", function (done) {
     var fetch = fetchBuilder({freeze: false}).fetch;
     fakeResponse(path);
-    fetch(host + path, function (err, content) {
-      content.should.eql({a: 1, b: 2});
-      content.b = "other";
-      fetch(host + path, function (err, content) {
-        content.should.eql({a: 1, b: 2});
+    fetch(host + path, function (_, content0) {
+      content0.should.eql({a: 1, b: 2});
+      content0.b = "other";
+      fetch(host + path, function (err, content1) {
+        content1.should.eql({a: 1, b: 2});
         done(err);
       });
     });
@@ -33,11 +31,11 @@ describe("Fetching redirected resources", function () {
   it("should not clone an object if clone is set to false", function (done) {
     var fetch = fetchBuilder({freeze: false, clone: false}).fetch;
     fakeResponse(path);
-    fetch(host + path, function (err, content) {
-      content.should.eql({a: 1, b: 2});
-      content.b = "other";
-      fetch(host + path, function (err, content) {
-        content.should.eql({a: 1, b: "other"});
+    fetch(host + path, function (_, content0) {
+      content0.should.eql({a: 1, b: 2});
+      content0.b = "other";
+      fetch(host + path, function (err, content1) {
+        content1.should.eql({a: 1, b: "other"});
         done(err);
       });
     });
@@ -61,13 +59,13 @@ describe("Fetching redirected resources", function () {
         Location: host + "/otherPath"
       });
 
-    fetch(host + path, function (err, content) {
-      if (err) return done(err);
-      expected(content);
-      content.statusCode = 200;
-      fetch(host + path, function (err, content) {
+    fetch(host + path, function (err0, content0) {
+      if (err0) return done(err0);
+      expected(content0);
+      content0.statusCode = 200;
+      fetch(host + path, function (err, content1) {
         if (err) return done(err);
-        expected(content);
+        expected(content1);
         done(err);
       });
     });

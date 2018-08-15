@@ -2,9 +2,6 @@
 
 var initCache = require("../../lib/initCache");
 var should = require("chai").should();
-var wrap = function (value) {
-  return function () {return value;};
-};
 
 describe("initCache", function () {
   it("should init a disabled cache if disabled", function () {
@@ -49,3 +46,9 @@ describe("initCache", function () {
   });
 
 });
+
+function wrap(value) {
+  return function () {
+    return value;
+  };
+}

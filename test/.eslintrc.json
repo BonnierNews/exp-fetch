@@ -1,0 +1,35 @@
+{
+  "extends": "../.eslintrc.json",
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "new-cap": [
+      2,
+      {
+        "capIsNewExceptions": [
+          "Feature",
+          "Scenario",
+          "Given",
+          "When",
+          "Then",
+          "And",
+          "But",
+          "I",
+          "System",
+          "Describe"
+        ]
+      }
+    ],
+    "no-unused-expressions": 0
+  },
+  "globals": {
+    "Feature": false,
+    "Scenario": false,
+    "Given": false,
+    "When": false,
+    "Then": false,
+    "And": false,
+    "But": false
+  }
+}

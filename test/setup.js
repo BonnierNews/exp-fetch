@@ -1,3 +1,5 @@
+"use strict";
+
 // Make sure dates are displayed in the correct timezone
 process.env.TZ = "Europe/Stockholm";
 
@@ -20,3 +22,7 @@ chai.should();
 //chai.use(require("chai-as-promised"));
 //chai.use(require("chai-string"));
 //chai.use(require("chai-datetime"));
+
+const nock = require("nock");
+nock.disableNetConnect();
+nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);

@@ -1,13 +1,9 @@
 "use strict";
 
-var chai = require("chai");
-var should = chai.should();
-
-var fetchBuilder = require("../../.");
-var nock = require("nock");
-nock.disableNetConnect();
-nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
-//var util = require("util");
+const chai = require("chai");
+const should = chai.should();
+const fetchBuilder = require("../../.");
+const nock = require("nock");
 
 describe("Fetching redirected resources", function () {
   var host = "http://example.com";
@@ -49,8 +45,8 @@ describe("Fetching redirected resources", function () {
     var fetch = fetchBuilder().fetch;
     fakeRedirect(path, host + "/otherPath");
     fake.get("/otherPath").reply(200, {some: "content"});
-    fetch(host + path, function (err, content) {
-      content.should.eql({some: "content"});
+    fetch(host + path, function (_, content0) {
+      content0.should.eql({some: "content"});
       fetch(host + "/otherPath", function (err, content) {
         content.should.eql({some: "content"});
         done(err);
@@ -63,8 +59,8 @@ describe("Fetching redirected resources", function () {
     fakeRedirect(path, host + "/otherPath");
     fake.get("/otherPath").reply(200, {some: "content"});
     fake.get("/otherPath2").reply(200, {some: "otherContent"});
-    fetch(host + path, function (err, content) {
-      content.should.eql({some: "content"});
+    fetch(host + path, function (_, content0) {
+      content0.should.eql({some: "content"});
       fakeRedirect(path, "/otherPath2");
       fetch(host + path, function (err, content) {
         content.should.eql({some: "otherContent"});

@@ -1,23 +1,24 @@
 "use strict";
-var request = require("request");
-var VError = require("verror");
-var AsyncCache = require("exp-asynccache");
-var Promise = require("bluebird");
-var clone = require("clone");
-var util = require("util");
 
-var getMaxAge = require("./lib/maxAgeFromHeader.js");
-var dummyLogger = require("./lib/dummyLogger");
-var isNumber = require("./lib/isNumber");
-var dummyCache = require("./lib/dummyCache");
-var initCache = require("./lib/initCache");
-var parseResponse = require("./lib/parseResponse");
-var calculateCacheKey = require("./lib/calculateCacheKey");
-var isRedirect = require("./lib/isRedirect");
-var ensureAbsoluteUrl = require("./lib/ensureAbsoluteUrl");
-var currentAppConfig = require("./lib/currentAppConfig");
+const request = require("request");
+const VError = require("verror");
+const AsyncCache = require("exp-asynccache");
+const clone = require("clone");
+const util = require("util");
 
-var passThrough = function (key) { return key; };
+const getMaxAge = require("./lib/maxAgeFromHeader.js");
+const dummyLogger = require("./lib/dummyLogger");
+const isNumber = require("./lib/isNumber");
+const dummyCache = require("./lib/dummyCache");
+const initCache = require("./lib/initCache");
+const parseResponse = require("./lib/parseResponse");
+const calculateCacheKey = require("./lib/calculateCacheKey");
+const isRedirect = require("./lib/isRedirect");
+const ensureAbsoluteUrl = require("./lib/ensureAbsoluteUrl");
+const currentAppConfig = require("./lib/currentAppConfig");
+
+module.exports = buildFetch;
+module.exports.initLRUCache = initCache;
 
 function buildFetch(behavior) {
   behavior = behavior || {};
@@ -107,7 +108,7 @@ function buildFetch(behavior) {
   function deepFreezeObj(obj) {
     var propNames = Object.getOwnPropertyNames(obj);
 
-    propNames.forEach(function(name) {
+    propNames.forEach(function (name) {
       var prop = obj[name];
 
       if (typeof prop === "object" && prop !== null) {
@@ -121,11 +122,11 @@ function buildFetch(behavior) {
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
     var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, content);
 
-    var contentType = typeof content;
+    var typeOfContent = typeof content;
 
-    if (deepFreeze && contentType === "object") {
+    if (deepFreeze && typeOfContent === "object") {
       deepFreezeObj(content);
-    } else if (freeze && contentType === "object") {
+    } else if (freeze && typeOfContent === "object") {
       Object.freeze(content);
     }
 
@@ -195,7 +196,7 @@ function buildFetch(behavior) {
           return handleError(url, cacheKey, res, content, resolvedCallback);
         }
 
-        return parseResponse(content, contentType, function (err, transformed) {
+        return parseResponse(content, contentType, function (_, transformed) {
           return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
         });
       });
@@ -256,12 +257,13 @@ function buildFetch(behavior) {
     stats: function () {
       return {
         calls: stats.calls,
-        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) /  stats.calls : 0
+        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) / stats.calls : 0
       };
     }
   };
 
 }
 
-module.exports = buildFetch;
-module.exports.initLRUCache = initCache;
+function passThrough(key) {
+  return key;
+}

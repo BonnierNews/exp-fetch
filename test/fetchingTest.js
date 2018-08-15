@@ -1,14 +1,10 @@
 "use strict";
 
-var chai = require("chai");
-var should = chai.should();
-var Promise = require("bluebird");
-var nock = require("nock");
-var fetchBuilder = require("../.");
-//var Log = require("log");
-nock.disableNetConnect();
-nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
-var util = require("util");
+const chai = require("chai");
+const should = chai.should();
+const nock = require("nock");
+const fetchBuilder = require("../.");
+const util = require("util");
 
 describe("fetch", function () {
   var host = "http://example.com";
@@ -19,18 +15,19 @@ describe("fetch", function () {
   it("should support callbacks and promises", function (done) {
     var fetch = fetchBuilder().fetch;
     fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
-    fetch(host + path, function (err, body) {
+    fetch(host + path, (_, body) => {
       body.should.eql({some: "content"});
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
-      fetch(host + path).then(function (body) {
-        body.should.eql({some: "content"});
+
+      fetch(host + path).then(function (body2) {
+        body2.should.eql({some: "content"});
         done();
       }, done);
     });
   });
 
   describe("Fetching a json endpoint", function () {
-    var fetch = fetchBuilder({clone:false}).fetch;
+    const fetch = fetchBuilder({clone: false}).fetch;
 
     it("should should fetch an url", function (done) {
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "no-cache"});
@@ -44,8 +41,8 @@ describe("fetch", function () {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
         url: host + path,
-        headers: { "User-Agent": "request"}
-      }
+        headers: {"User-Agent": "request"}
+      };
       fetch(options, function (err, body) {
         body.should.eql({some: "content"});
         done(err);
@@ -56,8 +53,8 @@ describe("fetch", function () {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
         url: host + path,
-        headers: { "User-Agent": "request"}
-      }
+        headers: {"User-Agent": "request"}
+      };
       fetch(options).then(function (body) {
         body.should.eql({some: "content"});
         done();
@@ -69,8 +66,8 @@ describe("fetch", function () {
       fake.get("/testing321").matchHeader("User-Agent", "request").reply(200, {some: "content"}, {"cache-control": "no-cache"});
       var options = {
         url: host + path,
-        headers: { "User-Agent": "request"}
-      }
+        headers: {"User-Agent": "request"}
+      };
       fetch(options, function (err, body) {
         body.should.eql({some: "content"});
         done(err);
@@ -94,8 +91,8 @@ describe("fetch", function () {
     });
 
     it("should not freeze content if freeze is set to false", function (done) {
-      var localFetch = fetchBuilder({freeze:false, clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
+      var localFetch = fetchBuilder({freeze: false, clone: false}).fetch;
+      fake.get(path).reply(200, {some: "content", child: {some: "child-content"}}, {"cache-control": "no-cache"});
       localFetch(host + path, function (err, content) {
         Object.isFrozen(content).should.be.false;
         Object.isFrozen(content.child).should.be.false;
@@ -105,7 +102,7 @@ describe("fetch", function () {
 
     it("should freeze the result root but not descendants by default", function (done) {
       var localFetch = fetchBuilder({clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
+      fake.get(path).reply(200, {some: "content", child: {some: "child-content"}}, {"cache-control": "no-cache"});
       localFetch(host + path, function (err, content) {
         Object.isFrozen(content).should.be.true;
         Object.isFrozen(content.child).should.be.false;
@@ -113,14 +110,14 @@ describe("fetch", function () {
       });
     });
 
-
     it("should freeze objects recursively if deepFreeze is set to true", function (done) {
-      var localFetch = fetchBuilder({deepFreeze:true, clone: false}).fetch;
-      fake.get(path).reply(200, {some: "content", child: { some: "child-content" }}, {"cache-control": "no-cache"});
+      var localFetch = fetchBuilder({deepFreeze: true, clone: false}).fetch;
+      fake.get(path).reply(200, {some: "content", child: {some: "child-content"}}, {"cache-control": "no-cache"});
       localFetch(host + path, function (err, content) {
+        if (err) return done(err);
         Object.isFrozen(content).should.be.true;
         Object.isFrozen(content.child).should.be.true;
-        done(err);
+        done();
       });
     });
   });
@@ -168,7 +165,7 @@ describe("fetch", function () {
     it("should call onRequestInit with request options", function (done) {
       var called = false;
       var behavior = {
-        onRequestInit: function(options) {
+        onRequestInit: function (options) {
           options.should.have.property("url");
           options.should.have.property("json", true);
           options.should.have.property("followRedirect", true);
@@ -190,7 +187,7 @@ describe("fetch", function () {
       var called = false;
       var behavior = {
         followRedirect: false,
-        onRequestInit: function(options) {
+        onRequestInit: function (options) {
           if (called) throw new Error("Called twice!");
 
           options.should.have.property("url");
@@ -215,7 +212,7 @@ describe("fetch", function () {
       var called = false;
       var behavior = {
         followRedirect: true,
-        onRequestInit: function(options) {
+        onRequestInit: function (options) {
           if (called) throw new Error("Called twice!");
 
           options.should.have.property("url");
@@ -239,7 +236,7 @@ describe("fetch", function () {
       var called = false;
       var behavior = {
         followRedirect: true,
-        onRequestInit: function(options) {
+        onRequestInit: function (options) {
           if (called) throw new Error("Called twice!");
 
           options.should.have.property("url");
@@ -252,8 +249,8 @@ describe("fetch", function () {
       };
 
       var fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, function (err) {
-        if (err) return done(err);
+      fetch(host + path, function (err0) {
+        if (err0) return done(err0);
         called = false;
         fetch(host + path, function (err) {
           if (err) return done(err);
@@ -267,7 +264,7 @@ describe("fetch", function () {
       var called = [];
       var behavior = {
         followRedirect: true,
-        onRequestInit: function(options) {
+        onRequestInit: function (options) {
           called.push(options.url);
         }
       };
@@ -291,13 +288,14 @@ describe("fetch", function () {
     it("should cache by default", function (done) {
       var fetch = fetchBuilder().fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
-      fetch(host + path, function (err, body) {
-        body.should.eql({some: "content"});
+      fetch(host + path, function (_, body0) {
+        body0.should.eql({some: "content"});
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
-        fetch(host + path, function (err, body) {
-          body.should.eql({some: "content"});
+        fetch(host + path, function (err, body1) {
+          if (err) return done(err);
+          body1.should.eql({some: "content"});
           fake.pendingMocks().should.eql([util.format("GET %s:80%s", host, path)]);
-          done(err);
+          done();
         });
       });
     });
@@ -305,12 +303,13 @@ describe("fetch", function () {
     it("should not cache if falsy cache is given", function (done) {
       var fetch = fetchBuilder({cache: null}).fetch;
       fake.get(path).reply(200, {some: "content"}, {"cache-control": "max-age=30"});
-      fetch(host + path, function (err, body) {
-        body.should.eql({some: "content"});
+      fetch(host + path, function (_, body0) {
+        body0.should.eql({some: "content"});
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
-        fetch(host + path, function (err, body) {
-          body.should.eql({some: "contentz"});
-          done(err);
+        fetch(host + path, function (err, body1) {
+          if (err) return done(err);
+          body1.should.eql({some: "contentz"});
+          done();
         });
       });
     });
@@ -364,11 +363,11 @@ describe("fetch", function () {
       }
 
       var fetch = fetchBuilder({maxAgeFn: maxAgeFn}).fetch;
-      fetch(host + path).then(function (content) {
+      fetch(host + path).then(function (content0) {
         fake.get(path).reply(200, {some: "contentz"}, {"cache-control": "max-age=30"});
-        content.should.eql({some: "content"});
-        fetch(host + path).then(function (content) {
-          content.should.eql({some: "contentz"});
+        content0.should.eql({some: "content"});
+        fetch(host + path).then(function (content1) {
+          content1.should.eql({some: "contentz"});
           done();
         }, done);
       }, done);
@@ -376,7 +375,7 @@ describe("fetch", function () {
 
     it("should cache with a custom maxAgeFn on errors", function (done) {
       fake.get(path).reply(503, {some: "content"}, {"cache-control": "max-age=30"});
-      function maxAgeFn(maxAge /*, key, headers, content */) {
+      function maxAgeFn() {
         return done();
       }
 
@@ -491,7 +490,7 @@ describe("fetch", function () {
     it("should include app name from package.json", function (done) {
       var fetch = fetchBuilder({contentType: "json"}).fetch;
       fake.get(path).reply(function () {
-        this.req.headers['x-exp-fetch-appname'].should.eql("exp-fetch");
+        this.req.headers["x-exp-fetch-appname"].should.eql("exp-fetch");
         done();
       });
       fetch(host + path);
@@ -499,7 +498,7 @@ describe("fetch", function () {
   });
 
   describe("timeout", function () {
-    it("should honor timeout set in behavior", function(done) {
+    it("should honor timeout set in behavior", function (done) {
       var fetch = fetchBuilder({
         timeout: 10
       }).fetch;
@@ -507,14 +506,15 @@ describe("fetch", function () {
         .get(path)
         .socketDelay(600)
         .reply(200, {some: "content"});
-      fetch(host + path, function (err, body) {
+
+      fetch(host + path, function (err) {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
         done();
       });
     });
 
-    it("should allow overriding behavior timeout per request", function(done) {
+    it("should allow overriding behavior timeout per request", function (done) {
       var fetch = fetchBuilder({
         timeout: 200
       }).fetch;
@@ -522,14 +522,14 @@ describe("fetch", function () {
         .get(path)
         .socketDelay(30)
         .reply(200, {some: "content"});
-      fetch({url: host + path, timeout: 1}, function (err, body) {
+      fetch({url: host + path, timeout: 1}, function (err) {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
         done();
       });
     });
 
-    it("should allow overriding behavior timeout per request when following redirects", function(done) {
+    it("should allow overriding behavior timeout per request when following redirects", function (done) {
       var fetch = fetchBuilder({
         timeout: 200
       }).fetch;
@@ -541,14 +541,14 @@ describe("fetch", function () {
         .get("/someotherpath")
         .socketDelay(30)
         .reply(200, {some: "content"});
-      fetch({url: host + path, timeout: 1}, function (err, body) {
+      fetch({url: host + path, timeout: 1}, function (err) {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
         done();
       });
     });
 
-    it("should allow overriding behavior timeout per request when using promises", function(done) {
+    it("should allow overriding behavior timeout per request when using promises", function (done) {
       var fetch = fetchBuilder({
         timeout: 200
       }).fetch;
@@ -564,9 +564,9 @@ describe("fetch", function () {
     });
   });
 
-  describe("Global header", function() {
+  describe("Global header", function () {
     const fetch = fetchBuilder({
-        headers: { "User-Agent": "request"}
+      headers: {"User-Agent": "request"}
     }).fetch;
 
     const options = {
@@ -574,7 +574,7 @@ describe("fetch", function () {
       headers: {"X-Test": "test"}
     };
 
-    it("should pass through global headers and local headers", function(done) {
+    it("should pass through global headers and local headers", function (done) {
       fake.get(path)
         .matchHeader("User-Agent", "request")
         .matchHeader("X-Test", "test")
@@ -584,7 +584,6 @@ describe("fetch", function () {
         done(err);
       });
     });
-
 
     it("should be able to pass on request headers in promises", function (done) {
       fake.get(path)
@@ -614,9 +613,8 @@ describe("fetch", function () {
       fake.get(path)
         .matchHeader("User-Agent", "local-request")
         .reply(200, {some: "content"}, {"cache-control": "no-cache"});
-      options.headers = { "User-Agent" : "local-request"};
+      options.headers = {"User-Agent": "local-request"};
       fetch(options, function (err, body) {
-        console.log(err);
         body.should.eql({some: "content"});
         done(err);
       });
