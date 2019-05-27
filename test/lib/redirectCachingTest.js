@@ -11,9 +11,10 @@ describe("Fetching redirected resources", function () {
   var fake = nock(host);
   afterEach(nock.cleanAll);
 
-  function fakeRedirect(from, to) {
+  function fakeRedirect(from, to, times) {
     fake
       .get(from)
+      .times(times || 1)
       .reply(302, "", {
         Location: to,
         "cache-control": "no-cache"
@@ -96,6 +97,21 @@ describe("Fetching redirected resources", function () {
     fetch(host + path, function (err, content) {
       should.exist(err);
       should.not.exist(content);
+      done();
+    });
+  });
+
+  it("should handle protocol and host changes", function (done) {
+    var fetch = fetchBuilder().fetch;
+    var secureHost = "https://secure-example.com";
+    var secureFake = nock(secureHost);
+
+    fakeRedirect(path, secureHost + path, 15);
+    secureFake.get(path).reply(200, {some: "secure-content"});
+
+    fetch(host + path, function (err, content) {
+      if (err) return done(err);
+      content.should.eql({some: "secure-content"});
       done();
     });
   });
