@@ -25,6 +25,7 @@ function buildFetch(behavior) {
 
   // Options
   var freeze = true;
+  const contentOnError = behavior.contentOnError || false;
   var deepFreeze = false;
   var cache = new AsyncCache(initCache({age: 60}));
   var cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
@@ -102,6 +103,11 @@ function buildFetch(behavior) {
     }
     var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content)) : null;
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
+
+    if (contentOnError) {
+      return resolvedCallback(null, cacheValueFn({statusCode: res.statusCode, body: content}, res.headers, res.statusCode), errorAge);
+    }
+
     return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
   }
 

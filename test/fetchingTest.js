@@ -486,6 +486,33 @@ describe("fetch", function () {
     });
   });
 
+  describe("contentOnError option", () => {
+    it("should return null if not set", (done) => {
+      const fetch = fetchBuilder().fetch;
+      fake.get(path).reply(409, {some: "content"});
+      fetch(host + path, (err, content) => {
+        should.exist(err);
+        should.not.exist(content);
+        done();
+      });
+    });
+
+    it("should return content on error if contentOnError=true", (done) => {
+      const fetch = fetchBuilder({contentOnError: true}).fetch;
+      fake.get(path).reply(409, {some: "content"});
+      fetch(host + path, (err, content) => {
+        should.not.exist(err);
+        content.should.deep.equal({
+          statusCode: 409,
+          body: {
+            some: "content",
+          }
+        });
+        done();
+      });
+    });
+  });
+
   describe("app name header", function () {
     it("should include app name from package.json", function (done) {
       var fetch = fetchBuilder({contentType: "json"}).fetch;
