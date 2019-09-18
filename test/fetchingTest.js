@@ -533,6 +533,27 @@ describe("fetch", function () {
       });
     });
 
+    it("should allow overriding timeout behavior with object for socket timeout", function (done) {
+      var fetch = fetchBuilder({
+        timeout: 200
+      }).fetch;
+      fake
+        .get(path)
+        .socketDelay(30)
+        .reply(200, {some: "content"});
+
+      fetch({
+        url: host + path,
+        timeout: {
+          socket: 10
+        }
+      }, function (err) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
     it("should allow overriding behavior timeout per request when following redirects", function (done) {
       var fetch = fetchBuilder({
         timeout: 200
