@@ -36,5 +36,9 @@
     "lru-cache": "^5.1.1",
     "verror": "^1.10.0",
     "xml2js": "^0.4.22"
-  }
+  },
+  "files": [
+    "lib/",
+    "index.js"
+  ]
 }
