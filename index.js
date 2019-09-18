@@ -1,6 +1,6 @@
 "use strict";
 
-const request = require("request");
+const request = require("got");
 const VError = require("verror");
 const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
@@ -168,6 +168,7 @@ function buildFetch(behavior) {
         json: contentType === "json",
         agent: keepAliveAgent,
         followRedirect: false,
+        retry: false,
         method: httpMethod,
         timeout: explicitTimeout || timeout,
         headers: headers
@@ -185,7 +186,6 @@ function buildFetch(behavior) {
         headers: options.headers
       };
       if (onRequestInit && !onRequestInit.called) {
-
         onRequestInit(passOptions, cacheKey);
       }
 
@@ -194,19 +194,21 @@ function buildFetch(behavior) {
         resolveFunction(err, content, maxAge);
       }
 
-      request(options, function (err, res, content) {
-        if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
-        if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
-
-        if (res.statusCode === 404) {
-          return handleNotFound(url, cacheKey, res, content, resolvedCallback);
-        } else if (res.statusCode > 299) {
-          return handleError(url, cacheKey, res, content, resolvedCallback);
-        }
-
-        return parseResponse(content, contentType, function (_, transformed) {
+      return request(options).then((res) => {
+        if (isRedirect(res)) return handleRedirect(url, cacheKey, res, res.body, resolvedCallback);
+        return parseResponse(res.body, contentType, function (_, transformed) {
           return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
         });
+      }).catch((err) => {
+        if (err.statusCode === 404) {
+          return handleNotFound(url, cacheKey, err, err.body, resolvedCallback);
+        } else if (err.statusCode > 299) {
+          return handleError(url, cacheKey, err, err.body, resolvedCallback);
+        } else if (err instanceof request.TimeoutError) {
+          return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
+        }
+
+        resolvedCallback(err);
       });
     }, function (err, response) {
       if (followRedirect && isRedirect(response)) {

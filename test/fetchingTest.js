@@ -487,14 +487,15 @@ describe("fetch", function () {
   });
 
   describe("app name header", function () {
-    it("should include app name from package.json", function (done) {
+    it("should include app name from package.json", function () {
       var fetch = fetchBuilder({contentType: "json"}).fetch;
-      fake.get(path).reply(function () {
-        this.req.headers["x-exp-fetch-appname"].should.eql("exp-fetch");
-        done();
-        return [200, null];
-      });
-      fetch(host + path);
+
+      fake
+        .get(path)
+        .matchHeader("x-exp-fetch-appname", "exp-fetch")
+        .reply(200);
+
+      return fetch(host + path);
     });
   });
 
@@ -503,9 +504,10 @@ describe("fetch", function () {
       var fetch = fetchBuilder({
         timeout: 10
       }).fetch;
+
       fake
         .get(path)
-        .socketDelay(600)
+        .delay(600)
         .reply(200, {some: "content"});
 
       fetch(host + path, function (err) {
@@ -521,8 +523,9 @@ describe("fetch", function () {
       }).fetch;
       fake
         .get(path)
-        .socketDelay(30)
+        .delay(30)
         .reply(200, {some: "content"});
+
       fetch({url: host + path, timeout: 1}, function (err) {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
@@ -540,7 +543,7 @@ describe("fetch", function () {
 
       fake
         .get("/someotherpath")
-        .socketDelay(30)
+        .delay(30)
         .reply(200, {some: "content"});
       fetch({url: host + path, timeout: 1}, function (err) {
         should.exist(err);
@@ -555,7 +558,7 @@ describe("fetch", function () {
       }).fetch;
       fake
         .get(path)
-        .socketDelay(30)
+        .delay(30)
         .reply(200, {some: "content"});
       fetch({url: host + path, timeout: 1}).catch(function (err) {
         should.exist(err);
