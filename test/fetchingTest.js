@@ -10,7 +10,7 @@ describe("fetch", function () {
   var host = "http://example.com";
   var path = "/testing123";
   var fake = nock(host);
-  afterEach(nock.cleanAll);
+  beforeEach(nock.cleanAll);
 
   it("should support callbacks and promises", function (done) {
     var fetch = fetchBuilder().fetch;
@@ -499,8 +499,35 @@ describe("fetch", function () {
     });
   });
 
+  describe.skip("retry", function () { // 2019-09-19 - Skip until next version of got is published - takes 3000ms otherwise
+    it("should retry if retry is specified in behavior", async () => {
+      var fetch = fetchBuilder({
+        contentType: "json",
+        cache: false,
+        retry: {
+          calculateDelay() {
+            return 50;
+          },
+          retries: 2,
+          statusCodes: [500, 503]
+        }
+      }).fetch;
+
+      nock(host)
+        .get(path)
+        .reply(500)
+        .get(path)
+        .reply(503)
+        .get(path)
+        .reply(200, {data: 1});
+
+      const response = await fetch(host + path);
+      response.should.deep.equal({data: 1});
+    });
+  });
+
   describe("timeout", function () {
-    it("should honor timeout set in behavior", function (done) {
+    it("should honour timeout set in behavior", function (done) {
       var fetch = fetchBuilder({
         timeout: 10
       }).fetch;
@@ -508,6 +535,44 @@ describe("fetch", function () {
       fake
         .get(path)
         .delay(600)
+        .reply(200, {some: "content"});
+
+      fetch(host + path, function (err) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
+    it("should honour socket timeout set in behavior", function (done) {
+      var fetch = fetchBuilder({
+        timeout: {
+          socket: 10
+        }
+      }).fetch;
+
+      fake
+        .get(path)
+        .socketDelay(30)
+        .reply(200, {some: "content"});
+
+      fetch(host + path, function (err) {
+        should.exist(err);
+        err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+
+    it("should honour response timeout set in behavior", function (done) {
+      var fetch = fetchBuilder({
+        timeout: {
+          response: 10
+        }
+      }).fetch;
+
+      fake
+        .get(path)
+        .delay(100)
         .reply(200, {some: "content"});
 
       fetch(host + path, function (err) {

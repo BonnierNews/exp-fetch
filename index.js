@@ -45,6 +45,7 @@ function buildFetch(behavior) {
   var timeout = behavior.timeout || 20000;
   var stats = {calls: 0, misses: 0};
   var globalHeaders = behavior.headers || {};
+  var retry = "retry" in behavior ? behavior.retry : false;
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
@@ -168,10 +169,11 @@ function buildFetch(behavior) {
         json: contentType === "json",
         agent: keepAliveAgent,
         followRedirect: false,
-        retry: false,
+        retry,
         method: httpMethod,
         timeout: explicitTimeout || timeout,
-        headers: headers
+        headers: headers,
+        cache: false
       };
 
       if (body) {
