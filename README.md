@@ -76,6 +76,7 @@ poster("http://example.com/query", body, function (err, content) {
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `maxAgeFn`: (default: respects the `cache-control` header)
 * `onRequestInit`: If given a function, it will be called before the actual request is made, see [Hooks](#hooks) for signature
+* `onCacheMiss`: If given a function, it will be called each time nothing is found in the cache and fetch does a request
 * `onNotFound`: If given a function, it will be called each time fetch encounters a 404
 * `onError`: If given a function, it will be called each time fetch encounters a non 200 nor 404 response
 * `onSuccess`: If given a function, it will be called each time fetch encounters a 200

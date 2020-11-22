@@ -142,6 +142,10 @@ describe("fetch", function () {
 
     }
 
+    it("should call onCacheMiss if request is done", function (done) {
+      testStatus(200, "onCacheMiss", done);
+    });
+
     it("should call onNotFound if 404", function (done) {
       testStatus(404, "onNotFound", done);
     });

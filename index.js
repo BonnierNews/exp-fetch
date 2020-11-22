@@ -30,6 +30,7 @@ function buildFetch(behavior) {
   var cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
   var cacheValueFn = behavior.cacheValueFn || passThrough;
   var maxAgeFn = behavior.maxAgeFn || passThrough;
+  var onCacheMiss = behavior.onCacheMiss;
   var onNotFound = behavior.onNotFound;
   var onError = behavior.onError;
   var onSuccess = behavior.onSuccess;
@@ -187,6 +188,9 @@ function buildFetch(behavior) {
       }
 
       request(options, function (err, res, content) {
+        if (onCacheMiss) {
+          onCacheMiss(url, cacheKey, content);
+        }
         if (err) return resolvedCallback(new VError(err, "Fetching error for: %j", url));
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, content, resolvedCallback);
 
