@@ -564,6 +564,18 @@ describe("fetch", function () {
     });
   });
 
+  describe("error status codes", function () {
+    it("should pass on the error status code", function (done) {
+      var fetch = fetchBuilder().fetch;
+      fake.get(path).reply(500, "Internal Server Error");
+      fetch(host + path, function (err) {
+        should.exist(err);
+        err.statusCode.should.eql(500);
+        done();
+      });
+    });
+  });
+
   describe("Global header", function () {
     const fetch = fetchBuilder({
       headers: {"User-Agent": "request"}

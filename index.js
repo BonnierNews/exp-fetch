@@ -100,9 +100,17 @@ function buildFetch(behavior) {
     if (onError) {
       onError(url, cacheKey, res, content);
     }
-    var error = errorOnRemoteError ? new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content)) : null;
+
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
-    return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
+
+    if (errorOnRemoteError) {
+      var error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
+      error.statusCode = res.statusCode;
+
+      return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
+    }
+
+    return resolvedCallback(null, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
   }
 
   function deepFreezeObj(obj) {
