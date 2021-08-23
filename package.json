@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "engines": {
@@ -11,18 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ExpressenAB/exp-fetch.git"
+    "url": "git@github.com:BonnierNews/exp-fetch.git"
   },
   "keywords": [
     "fetch",
     "cache"
   ],
-  "author": "AB Kvällstidningen Expressen",
+  "author": "Bonnier News",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ExpressenAB/exp-fetch/issues"
+    "url": "https://github.com/BonnierNews/exp-fetch/issues"
   },
-  "homepage": "https://github.com/ExpressenAB/exp-fetch",
+  "homepage": "https://github.com/BonnierNews/exp-fetch",
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint": "^5.3.0",
