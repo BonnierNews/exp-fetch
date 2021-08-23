@@ -492,6 +492,7 @@ describe("fetch", function () {
       fake.get(path).reply(function () {
         this.req.headers["x-exp-fetch-appname"].should.eql("exp-fetch");
         done();
+        return [200, null];
       });
       fetch(host + path);
     });
