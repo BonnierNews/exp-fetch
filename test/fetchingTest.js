@@ -492,6 +492,7 @@ describe("fetch", function () {
       fake.get(path).reply(function () {
         this.req.headers["x-exp-fetch-appname"].should.eql("exp-fetch");
         done();
+        return [200, null];
       });
       fetch(host + path);
     });
@@ -559,6 +560,18 @@ describe("fetch", function () {
       fetch({url: host + path, timeout: 1}).catch(function (err) {
         should.exist(err);
         err.message.should.include("ESOCKETTIMEDOUT");
+        done();
+      });
+    });
+  });
+
+  describe("error status codes", function () {
+    it("should pass on the error status code", function (done) {
+      var fetch = fetchBuilder().fetch;
+      fake.get(path).reply(500, "Internal Server Error");
+      fetch(host + path, function (err) {
+        should.exist(err);
+        err.statusCode.should.eql(500);
         done();
       });
     });

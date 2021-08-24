@@ -1,6 +1,6 @@
 fetch
 =====
-[![Build Status](https://travis-ci.org/ExpressenAB/exp-fetch.svg?branch=master)](https://travis-ci.org/ExpressenAB/exp-fetch)
+[![Build Status](https://travis-ci.org/BonnierNews/exp-fetch.svg?branch=master)](https://travis-ci.org/BonnierNews/exp-fetch)
 
 A small and pluggable lib to fetch a resource and cache the result.
 
