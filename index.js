@@ -38,6 +38,7 @@ function buildFetch(behavior) {
   var errorOnRemoteError = true;
   var contentType = (behavior.contentType || "json").toLowerCase();
   var keepAliveAgent = behavior.agent;
+  var keepAliveSSHAgent = behavior.sshAgent;
   var followRedirect = true;
   var performClone = true;
   var maximumNumberOfRedirects = 10;
@@ -166,7 +167,7 @@ function buildFetch(behavior) {
       var options = {
         url: url,
         json: contentType === "json",
-        agent: keepAliveAgent,
+        agent: url.startsWith("https://") ? keepAliveSSHAgent : keepAliveAgent,
         followRedirect: false,
         method: httpMethod,
         timeout: explicitTimeout || timeout,
