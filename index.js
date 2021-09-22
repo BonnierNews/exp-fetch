@@ -1,6 +1,6 @@
 "use strict";
 
-const request = require("got");
+const got = require("got");
 const VError = require("verror");
 const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
@@ -24,33 +24,33 @@ function buildFetch(behavior) {
   behavior = behavior || {};
 
   // Options
-  var freeze = true;
-  var deepFreeze = false;
-  var cache = new AsyncCache(initCache({age: 60}));
-  var cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
-  var cacheValueFn = behavior.cacheValueFn || passThrough;
-  var maxAgeFn = behavior.maxAgeFn || passThrough;
-  var onNotFound = behavior.onNotFound;
-  var onError = behavior.onError;
-  var onSuccess = behavior.onSuccess;
-  var cacheNotFound = false;
-  var logger = behavior.logger || dummyLogger();
-  var errorOnRemoteError = true;
-  var contentType = (behavior.contentType || "json").toLowerCase();
-  var keepAliveAgent = behavior.agent;
-  var followRedirect = true;
-  var performClone = true;
-  var maximumNumberOfRedirects = 10;
-  var httpMethod = (behavior.httpMethod || "GET").toUpperCase();
-  var timeout = behavior.timeout || 20000;
-  var stats = {calls: 0, misses: 0};
-  var globalHeaders = behavior.headers || {};
-  var retry = "retry" in behavior ? behavior.retry : false;
+  let freeze = true;
+  let deepFreeze = false;
+  let cache = new AsyncCache(initCache({age: 60}));
+  const cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
+  const cacheValueFn = behavior.cacheValueFn || passThrough;
+  const maxAgeFn = behavior.maxAgeFn || passThrough;
+  const onNotFound = behavior.onNotFound;
+  const onError = behavior.onError;
+  const onSuccess = behavior.onSuccess;
+  let cacheNotFound = false;
+  const logger = behavior.logger || dummyLogger();
+  let errorOnRemoteError = true;
+  const contentType = (behavior.contentType || "json").toLowerCase();
+  const keepAliveAgent = behavior.agent;
+  let followRedirect = true;
+  let performClone = true;
+  const maximumNumberOfRedirects = 10;
+  const httpMethod = (behavior.httpMethod || "GET").toUpperCase();
+  const timeout = behavior.timeout || 20000;
+  const stats = {calls: 0, misses: 0};
+  const globalHeaders = behavior.headers || {};
+  const retry = "retry" in behavior ? behavior.retry : 0;
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
   }
-  var requestTimeFn = behavior.requestTimeFn || defaultRequestTimeFn;
+  const requestTimeFn = behavior.requestTimeFn || defaultRequestTimeFn;
 
   if (behavior.hasOwnProperty("clone")) {
     performClone = !!behavior.clone;
@@ -82,7 +82,7 @@ function buildFetch(behavior) {
 
   function handleNotFound(url, cacheKey, res, content, resolvedCallback) {
     logger.info("404 Not Found for: %j", url);
-    var notFoundAge = -1;
+    let notFoundAge = -1;
 
     if (onNotFound) {
       onNotFound(url, cacheKey, res, content);
@@ -96,7 +96,7 @@ function buildFetch(behavior) {
 
   function handleError(url, cacheKey, res, content, resolvedCallback) {
     logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
-    var errorAge = -1;
+    let errorAge = -1;
 
     if (onError) {
       onError(url, cacheKey, res, content);
@@ -105,7 +105,7 @@ function buildFetch(behavior) {
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
 
     if (errorOnRemoteError) {
-      var error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
+      const error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
       error.statusCode = res.statusCode;
 
       return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
@@ -115,10 +115,10 @@ function buildFetch(behavior) {
   }
 
   function deepFreezeObj(obj) {
-    var propNames = Object.getOwnPropertyNames(obj);
+    const propNames = Object.getOwnPropertyNames(obj);
 
-    propNames.forEach(function (name) {
-      var prop = obj[name];
+    propNames.forEach((name) => {
+      const prop = obj[name];
 
       if (typeof prop === "object" && prop !== null) {
         deepFreezeObj(prop);
@@ -129,9 +129,9 @@ function buildFetch(behavior) {
   }
 
   function handleSuccess(url, cacheKey, res, content, resolvedCallback) {
-    var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, content);
+    const maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, content);
 
-    var typeOfContent = typeof content;
+    const typeOfContent = typeof content;
 
     if (deepFreeze && typeOfContent === "object") {
       deepFreezeObj(content);
@@ -147,9 +147,9 @@ function buildFetch(behavior) {
   }
 
   function handleRedirect(url, cacheKey, res, body, resolvedCallback) {
-    var maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
+    const maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
 
-    var content = {
+    const content = {
       statusCode: res.statusCode,
       headers: res.headers
     };
@@ -157,16 +157,16 @@ function buildFetch(behavior) {
   }
 
   function performRequest(url, headers, explicitTimeout, body, redirectCount, callback, onRequestInit) {
-    var cacheKey = cacheKeyFn(url, body);
-    var startTime = new Date().getTime();
+    const cacheKey = cacheKeyFn(url, body);
+    const startTime = new Date().getTime();
     stats.calls++;
-    cache.lookup(cacheKey, function (resolveFunction) {
+    cache.lookup(cacheKey, (resolveFunction) => {
       stats.misses++;
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
-      var options = {
+      const options = {
         url: url,
-        json: contentType === "json",
+        responseType: contentType === "json" ? contentType : undefined,
         agent: keepAliveAgent,
         followRedirect: false,
         retry,
@@ -176,17 +176,20 @@ function buildFetch(behavior) {
         cache: false
       };
 
-      if (body) {
+      if (body && typeof body === "object") {
+        options.json = body;
+      } else if (body) {
         options.body = body;
       }
 
-      var passOptions = {
+      const passOptions = {
         url: options.url,
-        json: options.json,
         method: options.method,
+        responseType: contentType === "json" ? contentType : undefined,
         followRedirect: followRedirect,
         headers: options.headers
       };
+
       if (onRequestInit && !onRequestInit.called) {
         onRequestInit(passOptions, cacheKey);
       }
@@ -198,24 +201,26 @@ function buildFetch(behavior) {
 
       return request(options).then((res) => {
         if (isRedirect(res)) return handleRedirect(url, cacheKey, res, res.body, resolvedCallback);
-        return parseResponse(res.body, contentType, function (_, transformed) {
+        return parseResponse(res.body, contentType, (_, transformed) => {
           return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
         });
       }).catch((err) => {
-        if (err.statusCode === 404) {
-          return handleNotFound(url, cacheKey, err, err.body, resolvedCallback);
-        } else if (err.statusCode > 299) {
-          return handleError(url, cacheKey, err, err.body, resolvedCallback);
-        } else if (err instanceof request.TimeoutError) {
+        if (err instanceof got.HTTPError) {
+          if (err.response.statusCode === 404) {
+            return handleNotFound(url, cacheKey, err.response, err.response.body, resolvedCallback);
+          } else if (err.response.statusCode > 299) {
+            return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
+          }
+        } else if (err instanceof got.TimeoutError) {
           return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
         }
 
-        resolvedCallback(err);
+        return resolvedCallback(err);
       });
-    }, function (err, response) {
+    }, (err, response) => {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
-          var location = ensureAbsoluteUrl(response.headers, url);
+          const location = ensureAbsoluteUrl(response.headers, url);
           return performRequest(location, headers, explicitTimeout, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
@@ -227,9 +232,9 @@ function buildFetch(behavior) {
 
   return {
     fetch: function (options, optionalBody, resultCallback) {
-      var url = options;
-      var headers = Object.assign({}, globalHeaders, options.headers);
-      var explicitTimeout = null;
+      let url = options;
+      const headers = Object.assign({}, globalHeaders, options.headers);
+      let explicitTimeout = null;
       if (typeof options === "object") {
         if (options.url) {
           url = options.url;
@@ -247,22 +252,23 @@ function buildFetch(behavior) {
         resultCallback = optionalBody;
         optionalBody = null;
       }
-      var onRequestInit = function () {
-        if (behavior.onRequestInit) {
-          behavior.onRequestInit.apply(null, arguments);
-        }
-        onRequestInit.called = true;
-      };
 
       if (resultCallback) {
         performRequest(url, headers, explicitTimeout, optionalBody, 0, resultCallback, onRequestInit);
       } else {
-        return new Promise(function (resolve, reject) {
-          performRequest(url, headers, explicitTimeout, optionalBody, 0, function (err, content) {
+        return new Promise((resolve, reject) => {
+          performRequest(url, headers, explicitTimeout, optionalBody, 0, (err, content) => {
             if (err) return reject(err);
             return resolve(content);
           }, onRequestInit);
         });
+      }
+
+      function onRequestInit() {
+        if (behavior.onRequestInit) {
+          behavior.onRequestInit.apply(null, arguments);
+        }
+        onRequestInit.called = true;
       }
     },
 
@@ -278,4 +284,8 @@ function buildFetch(behavior) {
 
 function passThrough(key) {
   return key;
+}
+
+function request({url, ...options}) {
+  return got(url, {cache: false, ...options});
 }

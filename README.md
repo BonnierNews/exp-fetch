@@ -1,7 +1,6 @@
 fetch
 =====
-[![Build Status](https://travis-ci.org/BonnierNews/exp-fetch.svg?branch=master)](https://travis-ci.org/BonnierNews/exp-fetch)
-
+[![Built latest](https://github.com/BonnierNews/exp-fetch/exp-fetch/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/BonnierNews/exp-fetch/actions/workflows/build-latest.yaml)
 A small and pluggable lib to fetch a resource and cache the result.
 
 ### Usage
@@ -58,7 +57,7 @@ var fetchBuilder = require("exp-fetch");
 var behavior = { httpMethod: "POST"};
 var poster = fetchBuilder(behavior).fetch;
 var body = {
-    "query": "some string" 
+    "query": "some string"
 };
 
 poster("http://example.com/query", body, function (err, content) {
@@ -69,25 +68,27 @@ poster("http://example.com/query", body, function (err, content) {
 
 ### Allowed behavior options
 
-* `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
-* `deepFreeze`: (default:`false`). When this option is set to true it will freeze the response _recursively_ so that it or any objects it contains can't be modified. ("use strict" is needed)
+* `agent`: (default: null), keepAlive Agent instance.
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url + sha1 of the body) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped.
-* `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
-* `maxAgeFn`: (default: respects the `cache-control` header)
-* `onRequestInit`: If given a function, it will be called before the actual request is made, see [Hooks](#hooks) for signature
-* `onNotFound`: If given a function, it will be called each time fetch encounters a 404
-* `onError`: If given a function, it will be called each time fetch encounters a non 200 nor 404 response
-* `onSuccess`: If given a function, it will be called each time fetch encounters a 200
-* `requestTimeFn`: (default log with level `debug`) If given a function, it will be called when the request returned and processed from remote end. 
-* `logger`: A logger object implementing `error`, `warning`, `info`, `debug` for example https://github.com/tj/log.js
 * `cacheNotFound`: (default: false). If set it will cache 404s, if given a number it will cache the 404 for that time. If the `maxAgeFn` is given, it will get this time as the first parameter.
-* `errorOnRemoteError`: (default: true). If set it will treat a remote > 200 statusCode as an error.
-* `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
-* `agent`: (default: null), keepAlive Agent instance.
-* `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
+* `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
-* `httpMethod`: (default: `"GET"`), the HTTP-method that should be used to make requests. 
+* `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
+* `deepFreeze`: (default:`false`). When this option is set to true it will freeze the response _recursively_ so that it or any objects it contains can't be modified. ("use strict" is needed)
+* `errorOnRemoteError`: (default: true). If set it will treat a remote > 200 statusCode as an error.
+* `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)
+* `freeze`: (default:`true`). When this option is set to false it will not freeze the response so it can be modified. ("use strict" is needed)
+* `httpMethod`: (default: `"GET"`), the HTTP-method that should be used to make requests.
+* `logger`: A logger object implementing `error`, `warning`, `info`, `debug` for example https://github.com/tj/log.js
+* `maxAgeFn`: (default: respects the `cache-control` header)
+* `onError`: If given a function, it will be called each time fetch encounters a non 200 nor 404 response
+* `onNotFound`: If given a function, it will be called each time fetch encounters a 404
+* `onRequestInit`: If given a function, it will be called before the actual request is made, see [Hooks](#hooks) for signature
+* `onSuccess`: If given a function, it will be called each time fetch encounters a 200
+* `requestTimeFn`: (default log with level `debug`) If given a function, it will be called when the request returned and processed from remote end.
+* `retry`: see [got](https://github.com/sindresorhus/got) for details, defaults to 0
+* `timeout`: see [got](https://github.com/sindresorhus/got) for details, defaults to 20000ms
 
 The difference between `freeze` and `deepFreeze` is that `deepFreeze` walks the object graph and freezes any
 child objects in the retrieved data. `freeze` only freezes the root object but still allows modifications
@@ -110,7 +111,6 @@ Promise.all([
 ```
 
 #### CacheValueFn
-
 
 ```javascript
 var fetchBuilder = require("exp-fetch");
@@ -179,7 +179,7 @@ And `requestTimeFn` with signature:
 
 ```javascript
 function requestTimeFn(requestOptions, took) {
-    console.log("REQUEST", requestOption.method, ":", requestOption.url, "took", took,  "ms"); 
+    console.log("REQUEST", requestOption.method, ":", requestOption.url, "took", took,  "ms");
 }
 ```
 

@@ -1,7 +1,7 @@
 Changelog
 =========
 
-# 4.0.0
+# 5.0.0
 
 Replace [request](https://github.com/request/request/issues/3142) with [got](https://www.npmjs.com/package/got).
 
