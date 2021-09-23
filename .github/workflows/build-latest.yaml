@@ -2,7 +2,7 @@ name: Built latest
 
 on:
   push:
-    branches: [ default ]
+    branches: [ master ]
 
 jobs:
   build:

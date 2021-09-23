@@ -2,7 +2,7 @@ name: Built pull request
 
 on:
   pull_request:
-    branches: [ default ]
+    branches: [ master ]
 
 jobs:
   build:
