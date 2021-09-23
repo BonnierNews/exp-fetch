@@ -1,6 +1,6 @@
 fetch
 =====
-[![Built latest](https://github.com/BonnierNews/exp-fetch/exp-fetch/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/BonnierNews/exp-fetch/actions/workflows/build-latest.yaml)
+[![Built latest](https://github.com/BonnierNews/exp-fetch/actions/workflows/build-latest.yaml/badge.svg)](https://github.com/BonnierNews/exp-fetch/actions/workflows/build-latest.yaml)
 A small and pluggable lib to fetch a resource and cache the result.
 
 ### Usage
