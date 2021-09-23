@@ -1,6 +1,6 @@
 {
   "parserOptions": {
-    "ecmaVersion": 2017
+    "ecmaVersion": 2020
   },
   "env": {
     "node": true,
@@ -22,11 +22,12 @@
     "key-spacing": [1, { "beforeColon": false, "afterColon": true }],
     "keyword-spacing": 1,
     "indent": [1, 2, { "SwitchCase": 1, "MemberExpression": 1 }],
-    "new-cap": 2,
+    "new-cap": 0,
     "new-parens": 1,
     "no-alert": 2,
     "no-array-constructor": 2,
     "no-caller": 2,
+    "no-case-declarations": 0,
     "no-catch-shadow": 2,
     "no-console": 2,
     "no-duplicate-imports": 1,
@@ -53,6 +54,7 @@
     "no-path-concat": 2,
     "no-process-exit": 2,
     "no-proto": 2,
+    "no-prototype-builtins": 0,
     "no-return-assign": 2,
     "no-script-url": 2,
     "no-sequences": 2,
@@ -63,17 +65,19 @@
     "no-underscore-dangle": 0,
     "no-unused-expressions": 2,
     "no-use-before-define": [2, "nofunc"],
-    "no-var": 0,
+    "no-var": 2,
     "no-with": 2,
-    "prefer-arrow-callback": 0,
+    "prefer-arrow-callback": 2,
     "prefer-const": ["error", {"destructuring": "all"}],
-    "prefer-template": 0,
     "quotes": [1, "double"],
+    "require-atomic-updates": 0,
     "semi": [2, "always"],
     "semi-spacing": [1, {"before": false, "after": true}],
     "space-before-blocks": 1,
     "space-before-function-paren": [1, {"anonymous": "always", "named": "never"}],
     "space-infix-ops": 1,
+    "space-in-parens": [2, "never"],
+    "object-curly-spacing": [1, "never"],
     "space-unary-ops": [1, { "words": true, "nonwords": false }],
     "strict": [2, "global"],
     "yoda": [1, "never"]

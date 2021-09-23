@@ -1,34 +1,32 @@
 "use strict";
 
-var nock = require("nock");
-var fetchBuilder = require("../../.");
-nock.disableNetConnect();
-nock.enableNetConnect(/(localhost|127\.0\.0\.1):\d+/);
+const nock = require("nock");
+const fetchBuilder = require("../../.");
 
-describe("fetch stats", function () {
-  var host = "http://example.com";
-  var path = "/testing123";
-  var fake = nock(host);
+describe("fetch stats", () => {
+  const host = "http://example.com";
+  const path = "/testing123";
+  const fake = nock(host);
   afterEach(nock.cleanAll);
-  var fetch = fetchBuilder();
+  const fetch = fetchBuilder();
 
-  it("stats should be all zero at start", function () {
-    fetch.stats().should.eql({calls: 0, cacheHitRatio: 0});
+  it("stats should be all zero at start", () => {
+    expect(fetch.stats()).to.deep.equal({calls: 0, cacheHitRatio: 0});
   });
 
-  it("should have zero hit ratio after first access", function (done) {
+  it("should have zero hit ratio after first access", (done) => {
     fake.get(path).reply(200);
-    fetch.fetch(host + path, function (err) {
+    fetch.fetch(host + path, (err) => {
       if (err) return done(err);
-      fetch.stats().should.eql({calls: 1, cacheHitRatio: 0});
+      expect(fetch.stats()).to.deep.equal({calls: 1, cacheHitRatio: 0});
       done();
     });
   });
 
-  it("should have 50% hit ratio after another access", function (done) {
-    fetch.fetch(host + path, function (err) {
+  it("should have 50% hit ratio after another access", (done) => {
+    fetch.fetch(host + path, (err) => {
       if (err) return done(err);
-      fetch.stats().should.eql({calls: 2, cacheHitRatio: 0.5});
+      expect(fetch.stats()).to.deep.equal({calls: 2, cacheHitRatio: 0.5});
       done();
     });
   });
