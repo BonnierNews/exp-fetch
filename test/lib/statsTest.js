@@ -11,14 +11,14 @@ describe("fetch stats", () => {
   const fetch = fetchBuilder();
 
   it("stats should be all zero at start", () => {
-    expect(fetch.stats()).to.deep.equal({calls: 0, cacheHitRatio: 0});
+    expect(fetch.stats()).to.deep.equal({ calls: 0, cacheHitRatio: 0 });
   });
 
   it("should have zero hit ratio after first access", (done) => {
     fake.get(path).reply(200);
     fetch.fetch(host + path, (err) => {
       if (err) return done(err);
-      expect(fetch.stats()).to.deep.equal({calls: 1, cacheHitRatio: 0});
+      expect(fetch.stats()).to.deep.equal({ calls: 1, cacheHitRatio: 0 });
       done();
     });
   });
@@ -26,7 +26,7 @@ describe("fetch stats", () => {
   it("should have 50% hit ratio after another access", (done) => {
     fetch.fetch(host + path, (err) => {
       if (err) return done(err);
-      expect(fetch.stats()).to.deep.equal({calls: 2, cacheHitRatio: 0.5});
+      expect(fetch.stats()).to.deep.equal({ calls: 2, cacheHitRatio: 0.5 });
       done();
     });
   });

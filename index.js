@@ -26,7 +26,7 @@ function buildFetch(behavior) {
   // Options
   let freeze = true;
   let deepFreeze = false;
-  let cache = new AsyncCache(initCache({age: 60}));
+  let cache = new AsyncCache(initCache({ age: 60 }));
   const cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
   const cacheValueFn = behavior.cacheValueFn || passThrough;
   const maxAgeFn = behavior.maxAgeFn || passThrough;
@@ -43,7 +43,7 @@ function buildFetch(behavior) {
   const maximumNumberOfRedirects = 10;
   const httpMethod = (behavior.httpMethod || "GET").toUpperCase();
   const timeout = behavior.timeout || 20000;
-  const stats = {calls: 0, misses: 0};
+  const stats = { calls: 0, misses: 0 };
   const globalHeaders = behavior.headers || {};
   const retry = "retry" in behavior ? behavior.retry : 0;
 
@@ -52,31 +52,31 @@ function buildFetch(behavior) {
   }
   const requestTimeFn = behavior.requestTimeFn || defaultRequestTimeFn;
 
-  if (behavior.hasOwnProperty("clone")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "clone")) {
     performClone = !!behavior.clone;
   }
 
-  if (behavior.hasOwnProperty("freeze")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "freeze")) {
     freeze = !!behavior.freeze;
   }
 
-  if (behavior.hasOwnProperty("deepFreeze")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "deepFreeze")) {
     deepFreeze = !!behavior.deepFreeze;
   }
 
-  if (behavior.hasOwnProperty("followRedirect")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "followRedirect")) {
     followRedirect = !!behavior.followRedirect;
   }
 
-  if (behavior.hasOwnProperty("errorOnRemoteError")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "errorOnRemoteError")) {
     errorOnRemoteError = !!behavior.errorOnRemoteError;
   }
 
-  if (behavior.hasOwnProperty("cacheNotFound")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "cacheNotFound")) {
     cacheNotFound = behavior.cacheNotFound;
   }
 
-  if (behavior.hasOwnProperty("cache")) {
+  if (Object.prototype.hasOwnProperty.call(behavior, "cache")) {
     cache = behavior.cache || dummyCache;
   }
 
@@ -165,14 +165,14 @@ function buildFetch(behavior) {
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
       const options = {
-        url: url,
+        url,
         responseType: contentType === "json" ? contentType : undefined,
         agent: keepAliveAgent,
         followRedirect: false,
         retry,
         method: httpMethod,
         timeout: explicitTimeout || timeout,
-        headers: headers,
+        headers,
         cache: false
       };
 
@@ -186,7 +186,7 @@ function buildFetch(behavior) {
         url: options.url,
         method: options.method,
         responseType: contentType === "json" ? contentType : undefined,
-        followRedirect: followRedirect,
+        followRedirect,
         headers: options.headers
       };
 
@@ -286,6 +286,6 @@ function passThrough(key) {
   return key;
 }
 
-function request({url, ...options}) {
-  return got(url, {cache: false, ...options});
+function request({ url, ...options }) {
+  return got(url, { cache: false, ...options });
 }

@@ -12,30 +12,30 @@ describe("Fetching redirected resources", () => {
   function fakeResponse(pathName) {
     fake
       .get(pathName)
-      .reply(200, {a: 1, b: 2});
+      .reply(200, { a: 1, b: 2 });
   }
 
   it("should clone an object by default", (done) => {
-    const fetch = fetchBuilder({freeze: false}).fetch;
+    const fetch = fetchBuilder({ freeze: false }).fetch;
     fakeResponse(path);
     fetch(host + path, (_, content0) => {
-      expect(content0).to.deep.equal({a: 1, b: 2});
+      expect(content0).to.deep.equal({ a: 1, b: 2 });
       content0.b = "other";
       fetch(host + path, (err, content1) => {
-        expect(content1).to.deep.equal({a: 1, b: 2});
+        expect(content1).to.deep.equal({ a: 1, b: 2 });
         done(err);
       });
     });
   });
 
   it("should not clone an object if clone is set to false", (done) => {
-    const fetch = fetchBuilder({freeze: false, clone: false}).fetch;
+    const fetch = fetchBuilder({ freeze: false, clone: false }).fetch;
     fakeResponse(path);
     fetch(host + path, (_, content0) => {
-      expect(content0).to.deep.equal({a: 1, b: 2});
+      expect(content0).to.deep.equal({ a: 1, b: 2 });
       content0.b = "other";
       fetch(host + path, (err, content1) => {
-        expect(content1).to.deep.equal({a: 1, b: "other"});
+        expect(content1).to.deep.equal({ a: 1, b: "other" });
         done(err);
       });
     });
@@ -45,18 +45,18 @@ describe("Fetching redirected resources", () => {
     expect(content).to.deep.equal({
       statusCode: 302,
       headers: {
-        "location": host + "/otherPath"
+        location: `${host}/otherPath`
       }
     });
 
   }
 
   it("should clone redirects if followRedirect is set to false", (done) => {
-    const fetch = fetchBuilder({followRedirect: false, freeze: false}).fetch;
+    const fetch = fetchBuilder({ followRedirect: false, freeze: false }).fetch;
     fake
       .get(path)
       .reply(302, "", {
-        Location: host + "/otherPath"
+        Location: `${host}/otherPath`
       });
 
     fetch(host + path, (err0, content0) => {
