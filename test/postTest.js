@@ -25,9 +25,9 @@ describe("Posting", () => {
   }
 
   it("should make a post request", (done) => {
-    const fetch = fetchBuilder({httpMethod: "POST"}).fetch;
-    const body = {q: "term"};
-    const response = {a: 1, b: 2};
+    const fetch = fetchBuilder({ httpMethod: "POST" }).fetch;
+    const body = { q: "term" };
+    const response = { a: 1, b: 2 };
 
     fakeResponse(path, body, response);
     fetch(host + path, body, (err, content) => {
@@ -39,7 +39,7 @@ describe("Posting", () => {
   });
 
   it("should handle xml-post", (done) => {
-    const fetch = fetchBuilder({httpMethod: "POST", contentType: "dontparse"}).fetch;
+    const fetch = fetchBuilder({ httpMethod: "POST", contentType: "dontparse" }).fetch;
     const body = "<?xml version=\"1.0\" encoding=\"utf-8\"?><q>search</q>";
     const responseBody = "<?xml version=\"1.0\" encoding=\"utf-8\"?><a>response</a>";
 
@@ -53,12 +53,12 @@ describe("Posting", () => {
   });
 
   it("should follow a redirect when posting", (done) => {
-    const fetch = fetchBuilder({httpMethod: "POST"}).fetch;
-    const body = {q: "term"};
-    const response = {c: 1, d: 2};
+    const fetch = fetchBuilder({ httpMethod: "POST" }).fetch;
+    const body = { q: "term" };
+    const response = { c: 1, d: 2 };
     fakeRedirect("/someOtherPath", path);
     fakeResponse(path, body, response);
-    fetch(host + "/someOtherPath", body, (err, content) => {
+    fetch(`${host}/someOtherPath`, body, (err, content) => {
       if (!err) {
         expect(content).to.deep.equal(response);
       }
@@ -67,11 +67,11 @@ describe("Posting", () => {
   });
 
   it("should cache on url and body by default", (done) => {
-    const fetch = fetchBuilder({httpMethod: "POST"}).fetch;
-    const bodyOne = {q: "term"};
-    const responseOne = {a: 1, b: 2};
-    const bodyTwo = {q: "another world"};
-    const responseTwo = {c: 1, d: 2};
+    const fetch = fetchBuilder({ httpMethod: "POST" }).fetch;
+    const bodyOne = { q: "term" };
+    const responseOne = { a: 1, b: 2 };
+    const bodyTwo = { q: "another world" };
+    const responseTwo = { c: 1, d: 2 };
 
     fakeResponse(path, bodyOne, responseOne);
     fakeResponse(path, bodyTwo, responseTwo);
