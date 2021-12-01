@@ -1,6 +1,14 @@
 Changelog
 =========
 
+# 5.0.2
+
+Allow loggers that use the name `warn` in addition to `warning` functions.
+
+# 5.0.1
+
+Add `eslint-config-exp` as linting config.
+
 # 5.0.0
 
 Replace [request](https://github.com/request/request/issues/3142) with [got](https://www.npmjs.com/package/got).

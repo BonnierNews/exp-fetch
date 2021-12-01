@@ -95,7 +95,12 @@ function buildFetch(behavior) {
   }
 
   function handleError(url, cacheKey, res, content, resolvedCallback) {
-    logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
+    if (typeof logger.warning === "function") {
+      logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
+    } else if (typeof logger.warn === "function") {
+      logger.warn("HTTP Fetching error %d for: %j", res.statusCode, url);
+    }
+
     let errorAge = -1;
 
     if (onError) {
