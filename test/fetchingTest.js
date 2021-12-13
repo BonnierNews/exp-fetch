@@ -181,6 +181,30 @@ describe("fetch", () => {
       });
     });
 
+    it("should honour call onRequestInit with followRedirect false", (done) => {
+      let called = false;
+      const behavior = {
+        followRedirect: false,
+        onRequestInit: function (options) {
+          if (called) throw new Error("Called twice!");
+
+          expect(options).to.have.property("url");
+          expect(options).to.have.property("followRedirect", false);
+          fake.get(path).reply(301, {}, { "cache-control": "no-cache", location: "http://example.com" });
+          called = true;
+        }
+      };
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, res) => {
+        if (err) return done(err);
+        expect(called).to.be.true;
+        expect(res.statusCode).to.eql(301);
+        expect(res.headers).to.have.property("location", "http://example.com");
+        done();
+      });
+    });
+
     it("onRequestInit is only called once", (done) => {
       let called = false;
       const behavior = {
