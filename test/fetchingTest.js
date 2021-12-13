@@ -6,7 +6,7 @@ const fetchBuilder = require("../.");
 describe("fetch", () => {
   const host = "http://example.com";
   const path = "/testing123";
-  const fake = nock(host);
+  const fake = nock(host, { badheaders: [ "correlation-id", "x-correlation-id" ] });
   beforeEach(nock.cleanAll);
 
   it("should support callbacks and promises", (done) => {
@@ -275,6 +275,63 @@ describe("fetch", () => {
       });
       fetch(`${host}/parallel-2`, (err) => {
         if (err) return done(err);
+      });
+    });
+  });
+
+  describe("Correlation id", () => {
+    it("should use getCorrelationId from behavior", (done) => {
+      nock(host).get(path)
+        .matchHeader("correlation-id", "foo")
+        .reply(200, {}, { "cache-control": "no-cache" });
+      const behavior = {
+        getCorrelationId: () => {
+          return "foo";
+        }
+      };
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(body).to.eql({});
+        done();
+      });
+    });
+
+    it("should use getCorrelationId and header name from from behavior", (done) => {
+      nock(host).get(path)
+        .matchHeader("x-correlation-id", "moo")
+        .reply(200, {}, { "cache-control": "no-cache" });
+      const behavior = {
+        correlationIdHeader: "x-correlation-id",
+        getCorrelationId: () => {
+          return "moo";
+        }
+      };
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(body).to.eql({});
+        done();
+      });
+    });
+
+    it("should pass no correlation id if getCorrelationId returns null", (done) => {
+      nock(host, { badheaders: [ "correlation-id" ] }).get(path)
+        .reply(200, {}, { "cache-control": "no-cache" });
+
+      const behavior = {
+        getCorrelationId: () => {
+          return null;
+        }
+      };
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(body).to.eql({});
+        done();
       });
     });
   });

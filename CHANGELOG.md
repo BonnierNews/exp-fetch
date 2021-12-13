@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.1.0
+
+Allow passing correlation id function to pass correlation id when making requests.
+
 # 5.0.2
 
 Allow loggers that use the name `warn` in addition to `warning` functions.
