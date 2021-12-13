@@ -1,6 +1,5 @@
 "use strict";
 
-const { expect } = require("chai");
 const nock = require("nock");
 const fetchBuilder = require("../.");
 
