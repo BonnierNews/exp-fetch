@@ -76,6 +76,8 @@ poster("http://example.com/query", body, function (err, content) {
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
 * `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
+* `getCorrelationId`: (default: `null`), for each request call this function to pass as the correlation id header specified below. Does not pass correlation id if function is not defined or if it returns null.
+* `correlationIdHeader`: (default: `correlation-id`), header to use when passing correlation id.
 * `deepFreeze`: (default:`false`). When this option is set to true it will freeze the response _recursively_ so that it or any objects it contains can't be modified. ("use strict" is needed)
 * `errorOnRemoteError`: (default: true). If set it will treat a remote > 200 statusCode as an error.
 * `followRedirect`: (default: true), should fetch follow redirects (and cache the redirect chain)

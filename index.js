@@ -35,6 +35,8 @@ function buildFetch(behavior) {
   const onSuccess = behavior.onSuccess;
   let cacheNotFound = false;
   const logger = behavior.logger || dummyLogger();
+  const getCorrelationId = behavior.getCorrelationId;
+  const correlationIdHeader = behavior.correlationIdHeader || "correlation-id";
   let errorOnRemoteError = true;
   const contentType = (behavior.contentType || "json").toLowerCase();
   const keepAliveAgent = behavior.agent;
@@ -238,7 +240,17 @@ function buildFetch(behavior) {
   return {
     fetch: function (options, optionalBody, resultCallback) {
       let url = options;
-      const headers = Object.assign({}, globalHeaders, options.headers);
+
+      const extraHeaders = {};
+
+      if (getCorrelationId) {
+        const correlationId = getCorrelationId();
+        if (correlationId) {
+          extraHeaders[correlationIdHeader] = correlationId;
+        }
+      }
+
+      const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
       let explicitTimeout = null;
       if (typeof options === "object") {
         if (options.url) {
