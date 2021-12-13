@@ -7,7 +7,7 @@ const fetchBuilder = require("../.");
 describe("fetch", () => {
   const host = "http://example.com";
   const path = "/testing123";
-  const fake = nock(host);
+  const fake = nock(host, { badheaders: [ "correlation-id", "x-correlation-id" ] });
   beforeEach(nock.cleanAll);
 
   it("should support callbacks and promises", (done) => {
@@ -258,7 +258,7 @@ describe("fetch", () => {
 
   describe("Correlation id", () => {
     it("should use getCorrelationId from behavior", (done) => {
-      fake.get(path)
+      nock(host).get(path)
         .matchHeader("correlation-id", "foo")
         .reply(200, {}, { "cache-control": "no-cache" });
       const behavior = {
@@ -276,7 +276,7 @@ describe("fetch", () => {
     });
 
     it("should use getCorrelationId and header name from from behavior", (done) => {
-      fake.get(path)
+      nock(host).get(path)
         .matchHeader("x-correlation-id", "moo")
         .reply(200, {}, { "cache-control": "no-cache" });
       const behavior = {
