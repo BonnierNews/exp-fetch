@@ -25,6 +25,38 @@ describe("fetch", () => {
     });
   });
 
+  it("should support all the verbs", async() => {
+    const request = fetchBuilder();
+    fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.get(host + path).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.post(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.post(host + path, { foo: "bar" }).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.put(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.put(host + path, { foo: "bar" }).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.patch(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.patch(host + path, { foo: "bar" }).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.head(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.head(host + path).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.options(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.options(host + path).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+    fake.delete(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    await request.del(host + path, { foo: "bar" }).then((body2) => {
+      expect(body2).to.deep.equal({ some: "content" });
+    });
+  });
+
   describe("Fetching a json endpoint", () => {
     const fetch = fetchBuilder({ clone: false }).fetch;
 
