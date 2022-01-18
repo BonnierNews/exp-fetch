@@ -163,7 +163,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performRequest(url, headers, explicitTimeout, body, redirectCount, callback, onRequestInit) {
+  function performRequest(url, headers, explicitTimeout, explicitMethod, body, redirectCount, callback, onRequestInit) {
     const cacheKey = cacheKeyFn(url, body);
     const startTime = new Date().getTime();
     stats.calls++;
@@ -177,7 +177,7 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false,
         retry,
-        method: httpMethod,
+        method: explicitMethod || httpMethod,
         timeout: explicitTimeout || timeout,
         headers,
         cache: false
@@ -228,7 +228,7 @@ function buildFetch(behavior) {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
           const location = ensureAbsoluteUrl(response.headers, url);
-          return performRequest(location, headers, explicitTimeout, body, redirectCount, callback);
+          return performRequest(location, headers, explicitTimeout, explicitMethod, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
@@ -252,12 +252,22 @@ function buildFetch(behavior) {
 
       const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
       let explicitTimeout = null;
+      let explicitMethod = null;
+      let body = null;
       if (typeof options === "object") {
         if (options.url) {
           url = options.url;
         }
         if (options.timeout) {
           explicitTimeout = options.timeout;
+        }
+
+        if (options.body) {
+          body = options.body;
+        }
+
+        if (options.httpMethod) {
+          explicitMethod = options.httpMethod.toUpperCase();
         }
       }
 
@@ -270,11 +280,13 @@ function buildFetch(behavior) {
         optionalBody = null;
       }
 
+      if (!body) body = optionalBody;
+
       if (resultCallback) {
-        performRequest(url, headers, explicitTimeout, optionalBody, 0, resultCallback, onRequestInit);
+        performRequest(url, headers, explicitTimeout, explicitMethod, body, 0, resultCallback, onRequestInit);
       } else {
         return new Promise((resolve, reject) => {
-          performRequest(url, headers, explicitTimeout, optionalBody, 0, (err, content) => {
+          performRequest(url, headers, explicitTimeout, explicitMethod, body, 0, (err, content) => {
             if (err) return reject(err);
             return resolve(content);
           }, onRequestInit);

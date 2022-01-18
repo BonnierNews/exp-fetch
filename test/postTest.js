@@ -38,6 +38,20 @@ describe("Posting", () => {
     });
   });
 
+  it("should make a post request when overriding GET with POST", (done) => {
+    const fetch = fetchBuilder({ httpMethod: "GET" }).fetch;
+    const body = { q: "term" };
+    const response = { a: 1, b: 2 };
+
+    fakeResponse(path, body, response);
+    fetch({ url: host + path, body, httpMethod: "POST" }, (err, content) => {
+      if (!err) {
+        expect(content).to.deep.equal(response);
+      }
+      done(err);
+    });
+  });
+
   it("should handle xml-post", (done) => {
     const fetch = fetchBuilder({ httpMethod: "POST", contentType: "dontparse" }).fetch;
     const body = "<?xml version=\"1.0\" encoding=\"utf-8\"?><q>search</q>";
