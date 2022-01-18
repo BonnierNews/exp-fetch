@@ -51,6 +51,24 @@ fetch(options, function (err, content) {
 });
 ```
 
+#### Overriding HTTP method
+
+```javascript
+var fetchBuilder = require("exp-fetch");
+var behavior = {};
+var fetch = fetchBuilder(behavior).fetch;
+var options = {
+  url: "http://example.com/resource.json",
+  httpMethod: "POST",
+  headers: {
+    "User-agent": "exp-fetch"
+  }
+}
+fetch(options).then(function (content) {
+    // Do something with the result
+});
+```
+
 #### Issuing POST requests:
 
 ```javascript

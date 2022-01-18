@@ -25,6 +25,22 @@ describe("fetch", () => {
     });
   });
 
+  it("should support callbacks and promises when using options", (done) => {
+    const fetch = fetchBuilder().fetch;
+    fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+    fetch({ url: host + path }, (err, body) => {
+      if (err) return done(err);
+
+      expect(body).to.deep.equal({ some: "content" });
+      fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+
+      fetch({ url: host + path }).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+        done();
+      }, done);
+    });
+  });
+
   describe("Fetching a json endpoint", () => {
     const fetch = fetchBuilder({ clone: false }).fetch;
 
