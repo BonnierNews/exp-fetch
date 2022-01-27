@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.1.1
+
+Bump deps.
+
 # 5.1.0
 
 Allow passing correlation id function to pass correlation id when making requests.
