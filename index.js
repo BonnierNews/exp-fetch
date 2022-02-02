@@ -163,7 +163,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, content, maxAge);
   }
 
-  function performRequest(url, headers, explicitTimeout, body, redirectCount, callback, onRequestInit) {
+  function performRequest(url, headers, explicitTimeout, method, body, redirectCount, callback, onRequestInit) {
     const cacheKey = cacheKeyFn(url, body);
     const startTime = new Date().getTime();
     stats.calls++;
@@ -177,7 +177,7 @@ function buildFetch(behavior) {
         agent: keepAliveAgent,
         followRedirect: false,
         retry,
-        method: httpMethod,
+        method: method || httpMethod,
         timeout: explicitTimeout || timeout,
         headers,
         cache: false
@@ -228,7 +228,7 @@ function buildFetch(behavior) {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
           const location = ensureAbsoluteUrl(response.headers, url);
-          return performRequest(location, headers, explicitTimeout, body, redirectCount, callback);
+          return performRequest(location, headers, explicitTimeout, method, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
@@ -237,58 +237,60 @@ function buildFetch(behavior) {
     });
   }
 
-  return {
-    fetch: function (options, optionalBody, resultCallback) {
-      let url = options;
+  function fetch(method, options, optionalBody, resultCallback) {
+    let url = options;
 
-      const extraHeaders = {};
+    const extraHeaders = {};
 
-      if (getCorrelationId) {
-        const correlationId = getCorrelationId();
-        if (correlationId) {
-          extraHeaders[correlationIdHeader] = correlationId;
-        }
+    if (getCorrelationId) {
+      const correlationId = getCorrelationId();
+      if (correlationId) {
+        extraHeaders[correlationIdHeader] = correlationId;
       }
+    }
 
-      const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
-      let explicitTimeout = null;
-      if (typeof options === "object") {
-        if (options.url) {
-          url = options.url;
-        }
-        if (options.timeout) {
-          explicitTimeout = options.timeout;
-        }
+    const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
+    let explicitTimeout = null;
+    if (typeof options === "object") {
+      if (options.url) {
+        url = options.url;
       }
-
-      if (currentAppConfig.name) {
-        headers["x-exp-fetch-appname"] = currentAppConfig.name;
+      if (options.timeout) {
+        explicitTimeout = options.timeout;
       }
+    }
 
-      if (typeof optionalBody === "function") {
-        resultCallback = optionalBody;
-        optionalBody = null;
+    if (currentAppConfig.name) {
+      headers["x-exp-fetch-appname"] = currentAppConfig.name;
+    }
+
+    if (typeof optionalBody === "function") {
+      resultCallback = optionalBody;
+      optionalBody = null;
+    }
+
+    if (resultCallback) {
+      performRequest(url, headers, explicitTimeout, method, optionalBody, 0, resultCallback, onRequestInit);
+    } else {
+      return new Promise((resolve, reject) => {
+        performRequest(url, headers, explicitTimeout, method, optionalBody, 0, (err, content) => {
+          if (err) return reject(err);
+          return resolve(content);
+        }, onRequestInit);
+      });
+    }
+
+    function onRequestInit() {
+      if (behavior.onRequestInit) {
+        behavior.onRequestInit.apply(null, arguments);
       }
+      onRequestInit.called = true;
+    }
+  }
 
-      if (resultCallback) {
-        performRequest(url, headers, explicitTimeout, optionalBody, 0, resultCallback, onRequestInit);
-      } else {
-        return new Promise((resolve, reject) => {
-          performRequest(url, headers, explicitTimeout, optionalBody, 0, (err, content) => {
-            if (err) return reject(err);
-            return resolve(content);
-          }, onRequestInit);
-        });
-      }
-
-      function onRequestInit() {
-        if (behavior.onRequestInit) {
-          behavior.onRequestInit.apply(null, arguments);
-        }
-        onRequestInit.called = true;
-      }
-    },
-
+  const fetcher = {
+    fetch: fetch.bind(null, null),
+    del: fetch.bind(null, "DELETE"),
     stats: function () {
       return {
         calls: stats.calls,
@@ -297,6 +299,11 @@ function buildFetch(behavior) {
     }
   };
 
+  [ "GET", "PUT", "POST", "HEAD", "PATCH", "OPTIONS" ].forEach((verb) => {
+    fetcher[verb.toLowerCase()] = fetch.bind(null, verb);
+  });
+
+  return fetcher;
 }
 
 function passThrough(key) {
