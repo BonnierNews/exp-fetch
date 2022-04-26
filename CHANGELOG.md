@@ -1,6 +1,23 @@
 Changelog
 =========
 
+# 5.2.0
+
+Added the following methods to the object returned from `fetchBuilder`:
+
+* `get` - makes a GET request using the behavior passed to fetchBuilder
+* `post` - makes a POST request using the behavior passed to fetchBuilder
+* `put` - makes a PUT request using the behavior passed to fetchBuilder
+* `patch` - makes a PATCH request using the behavior passed to fetchBuilder
+* `head` - makes a HEAD request using the behavior passed to fetchBuilder
+* `options` - makes an OPTIONS request using the behavior passed to fetchBuilder
+* `del` - makes a DELETE request using the behavior passed to fetchBuilder
+
+Already existing methods are:
+
+* `fetch` - makes a request using the default method specified in behavior (defaults to GET)
+* `stats` - get stats for cached requests
+
 # 5.1.1
 
 Bump deps.

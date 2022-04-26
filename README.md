@@ -51,6 +51,23 @@ fetch(options, function (err, content) {
 });
 ```
 
+#### Using one build with many verbs
+
+```javascript
+const behavior = {};
+const request = require("exp-fetch")(behavior);
+
+// using the .get/.post/.etc methods will override httpMethod from behavior with
+// the specified verb
+const getRes = await request.get("foo.com");
+const postRes = await request.post("foo.com/epic-endpoint", {foo: "bar"});
+const patchRes = await request.patch("foo.com/epic-endpoint", {foo: "bar"});
+const headRes = await request.head("foo.com/epic-endpoint");
+const optionsRes = await request.options("foo.com/epic-endpoint");
+const putRes = await request.put("foo.com/epic-endpoint", {foo: "bar"});
+const deleteRes = await request.del("foo.com/epic-endpoint");
+```
+
 #### Issuing POST requests:
 
 ```javascript
