@@ -319,7 +319,7 @@ describe("fetch", () => {
       const behavior = {
         getCorrelationId: () => {
           return "foo";
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -338,7 +338,7 @@ describe("fetch", () => {
         correlationIdHeader: "x-correlation-id",
         getCorrelationId: () => {
           return "moo";
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -356,7 +356,7 @@ describe("fetch", () => {
       const behavior = {
         getCorrelationId: () => {
           return null;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
