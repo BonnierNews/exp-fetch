@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "exp-*"
+      - dependency-name: "eslint-config-exp"
+      - dependency-name: "@bonniernews/*"
+      - dependency-name: "@expressen/*"
+      - dependency-name: "depsane"
