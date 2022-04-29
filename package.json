@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "5.2.0",
+  "version": "6.0.0",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "scripts": {
@@ -25,12 +25,12 @@
     "chai": "^4.3.6",
     "eslint": "^7.32.0",
     "eslint-config-exp": "^0.0.1",
-    "exp-asynccache": "^3.0.0",
+    "exp-asynccache": "^3.1.0",
     "mocha": "^9.2.0",
     "nock": "^13.2.2"
   },
   "peerDependencies": {
-    "exp-asynccache": "^3.0.0"
+    "exp-asynccache": ">=3"
   },
   "dependencies": {
     "clone": "^2.1.1",

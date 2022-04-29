@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 6.0.0
+
+* `exp-asynccache` is now a peer dependency.
+
 # 5.2.0
 
 Added the following methods to the object returned from `fetchBuilder`:
