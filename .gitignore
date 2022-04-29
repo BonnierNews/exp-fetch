@@ -26,5 +26,3 @@ coverage
 
 .eslintcache
 *.sw[a-z]
-
-package-lock.json
