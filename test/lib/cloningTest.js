@@ -44,9 +44,7 @@ describe("Fetching redirected resources", () => {
   function expected(content) {
     expect(content).to.deep.equal({
       statusCode: 302,
-      headers: {
-        location: `${host}/otherPath`
-      }
+      headers: { location: `${host}/otherPath` },
     });
 
   }
@@ -55,9 +53,7 @@ describe("Fetching redirected resources", () => {
     const fetch = fetchBuilder({ followRedirect: false, freeze: false }).fetch;
     fake
       .get(path)
-      .reply(302, "", {
-        Location: `${host}/otherPath`
-      });
+      .reply(302, "", { Location: `${host}/otherPath` });
 
     fetch(host + path, (err0, content0) => {
       if (err0) return done(err0);

@@ -158,7 +158,7 @@ function buildFetch(behavior) {
 
     const content = {
       statusCode: res.statusCode,
-      headers: res.headers
+      headers: res.headers,
     };
     return resolvedCallback(null, content, maxAge);
   }
@@ -180,7 +180,7 @@ function buildFetch(behavior) {
         method: method || httpMethod,
         timeout: explicitTimeout || timeout,
         headers,
-        cache: false
+        cache: false,
       };
 
       if (body && typeof body === "object") {
@@ -194,7 +194,7 @@ function buildFetch(behavior) {
         method: options.method,
         responseType: contentType === "json" ? contentType : undefined,
         followRedirect,
-        headers: options.headers
+        headers: options.headers,
       };
 
       if (onRequestInit && !onRequestInit.called) {
@@ -294,9 +294,9 @@ function buildFetch(behavior) {
     stats: function () {
       return {
         calls: stats.calls,
-        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) / stats.calls : 0
+        cacheHitRatio: stats.calls > 0 ? (stats.calls - stats.misses) / stats.calls : 0,
       };
-    }
+    },
   };
 
   [ "GET", "PUT", "POST", "HEAD", "PATCH", "OPTIONS" ].forEach((verb) => {

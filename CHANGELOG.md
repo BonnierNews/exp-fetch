@@ -1,6 +1,11 @@
 Changelog
 =========
 
+# 5.2.1
+
+* Bump got from 11.8.3 to 11.8.5
+* Bump eslint and eslint-config-exp and obey the new linting rules
+
 # 5.2.0
 
 Added the following methods to the object returned from `fetchBuilder`:
