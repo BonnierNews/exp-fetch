@@ -25,7 +25,7 @@ describe("fetch", () => {
     });
   });
 
-  it("should support all the verbs", async() => {
+  it("should support all the verbs", async () => {
     const request = fetchBuilder();
     fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
     await request.get(host + path).then((body2) => {
@@ -72,7 +72,7 @@ describe("fetch", () => {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
         url: host + path,
-        headers: { "User-Agent": "request" }
+        headers: { "User-Agent": "request" },
       };
       fetch(options, (err, body) => {
         expect(body).to.deep.equal({ some: "content" });
@@ -84,7 +84,7 @@ describe("fetch", () => {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
         url: host + path,
-        headers: { "User-Agent": "request" }
+        headers: { "User-Agent": "request" },
       };
       fetch(options).then((body) => {
         expect(body).to.deep.equal({ some: "content" });
@@ -97,7 +97,7 @@ describe("fetch", () => {
       fake.get("/testing321").matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
         url: host + path,
-        headers: { "User-Agent": "request" }
+        headers: { "User-Agent": "request" },
       };
       fetch(options, (err, body) => {
         expect(body).to.deep.equal({ some: "content" });
@@ -202,7 +202,7 @@ describe("fetch", () => {
 
           fake.get(path).reply(200, {}, { "cache-control": "no-cache" });
           called = true;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -224,7 +224,7 @@ describe("fetch", () => {
           expect(options).to.have.property("followRedirect", false);
           fake.get(path).reply(301, {}, { "cache-control": "no-cache", location: "http://example.com" });
           called = true;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -249,7 +249,7 @@ describe("fetch", () => {
           fake.get(path).reply(301, {}, { "cache-control": "no-cache", location: `${host}/actual-content` });
           fake.get("/actual-content").reply(200, {}, { "cache-control": "no-cache" });
           called = true;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -272,7 +272,7 @@ describe("fetch", () => {
           fake.get(path).reply(301, {}, { "cache-control": "no-cache", location: `${host}/actual-content` });
           fake.get("/actual-content").reply(200, {}, { "cache-control": "no-cache" });
           called = true;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -293,7 +293,7 @@ describe("fetch", () => {
         followRedirect: true,
         onRequestInit: function (options) {
           called.push(options.url);
-        }
+        },
       };
 
       fake.get("/parallel-1").delay(98).reply(200, {}, { "cache-control": "no-cache" });
@@ -319,7 +319,7 @@ describe("fetch", () => {
       const behavior = {
         getCorrelationId: () => {
           return "foo";
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -338,7 +338,7 @@ describe("fetch", () => {
         correlationIdHeader: "x-correlation-id",
         getCorrelationId: () => {
           return "moo";
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -356,7 +356,7 @@ describe("fetch", () => {
       const behavior = {
         getCorrelationId: () => {
           return null;
-        }
+        },
       };
 
       const fetch = fetchBuilder(behavior).fetch;
@@ -409,7 +409,7 @@ describe("fetch", () => {
       Promise.all([
         fetch(host + path),
         fetch(`http://other.expample.com${path}`),
-        fetch(`${host}/testing/123/`)
+        fetch(`${host}/testing/123/`),
       ]).then((result) => {
         expect(result[0]).to.deep.equal({ some: "content" });
         expect(result[0]).to.deep.equal(result[1]).eql(result[2]);
@@ -423,7 +423,7 @@ describe("fetch", () => {
         return {
           body,
           headers,
-          statusCode
+          statusCode,
         };
       };
       const fetch = fetchBuilder({ cacheValueFn: valueFn }).fetch;
@@ -432,9 +432,9 @@ describe("fetch", () => {
           body: { some: "content" },
           headers: {
             "content-type": "application/json",
-            "cache-control": "max-age=30"
+            "cache-control": "max-age=30",
           },
-          statusCode: 200
+          statusCode: 200,
         });
         done(err);
       });
@@ -561,8 +561,8 @@ describe("fetch", () => {
         expect(body).to.deep.equal({
           channel: {
             title: "Expressen: Nyheter",
-            link: "http://www.expressen.se/"
-          }
+            link: "http://www.expressen.se/",
+          },
         });
         done(err);
       });
@@ -592,8 +592,8 @@ describe("fetch", () => {
             return 50;
           },
           retries: 2,
-          statusCodes: [ 500, 503 ]
-        }
+          statusCodes: [ 500, 503 ],
+        },
       }).fetch;
 
       nock(host)
@@ -611,9 +611,7 @@ describe("fetch", () => {
 
   describe("timeout", () => {
     it("should honour timeout set in behavior", (done) => {
-      const fetch = fetchBuilder({
-        timeout: 10
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: 10 }).fetch;
 
       fake
         .get(path)
@@ -628,11 +626,7 @@ describe("fetch", () => {
     });
 
     it("should honour socket timeout set in behavior", (done) => {
-      const fetch = fetchBuilder({
-        timeout: {
-          socket: 10
-        }
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: { socket: 10 } }).fetch;
 
       fake
         .get(path)
@@ -667,9 +661,7 @@ describe("fetch", () => {
     });
 
     it("should allow overriding behavior timeout per request", (done) => {
-      const fetch = fetchBuilder({
-        timeout: 200
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: 200 }).fetch;
       fake
         .get(path)
         .delay(30)
@@ -683,9 +675,7 @@ describe("fetch", () => {
     });
 
     it("should allow overriding timeout behavior with object for socket timeout", (done) => {
-      const fetch = fetchBuilder({
-        timeout: 200
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: 200 }).fetch;
       fake
         .get(path)
         .delayConnection(30)
@@ -693,9 +683,7 @@ describe("fetch", () => {
 
       fetch({
         url: host + path,
-        timeout: {
-          socket: 10
-        }
+        timeout: { socket: 10 },
       }, (err) => {
         if (!err) return done(new Error("No timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
@@ -704,9 +692,7 @@ describe("fetch", () => {
     });
 
     it("should allow overriding behavior timeout per request when following redirects", (done) => {
-      const fetch = fetchBuilder({
-        timeout: 200
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: 200 }).fetch;
       fake
         .get(path)
         .reply(301, null, { location: `${host}/someotherpath` });
@@ -723,9 +709,7 @@ describe("fetch", () => {
     });
 
     it("should allow overriding behavior timeout per request when using promises", (done) => {
-      const fetch = fetchBuilder({
-        timeout: 200
-      }).fetch;
+      const fetch = fetchBuilder({ timeout: 200 }).fetch;
       fake
         .get(path)
         .delay(30)
@@ -751,13 +735,11 @@ describe("fetch", () => {
   });
 
   describe("Global header", () => {
-    const fetch = fetchBuilder({
-      headers: { "User-Agent": "request" }
-    }).fetch;
+    const fetch = fetchBuilder({ headers: { "User-Agent": "request" } }).fetch;
 
     const options = {
       url: host + path,
-      headers: { "X-Test": "test" }
+      headers: { "X-Test": "test" },
     };
 
     it("should pass through global headers and local headers", (done) => {

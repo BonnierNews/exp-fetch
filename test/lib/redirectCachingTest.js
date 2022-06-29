@@ -15,7 +15,7 @@ describe("Fetching redirected resources", () => {
       .times(times || 1)
       .reply(302, "", {
         Location: to,
-        "cache-control": "no-cache"
+        "cache-control": "no-cache",
       });
   }
 
@@ -77,8 +77,8 @@ describe("Fetching redirected resources", () => {
         statusCode: 302,
         headers: {
           "cache-control": "no-cache",
-          location: `${host}/otherPath`
-        }
+          location: `${host}/otherPath`,
+        },
       });
       done(err);
     });

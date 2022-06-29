@@ -20,7 +20,7 @@ describe("Posting", () => {
       .post(from)
       .reply(302, "", {
         Location: to,
-        "cache-control": "no-cache"
+        "cache-control": "no-cache",
       });
   }
 
