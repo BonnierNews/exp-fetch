@@ -48,6 +48,7 @@ function buildFetch(behavior) {
   const stats = { calls: 0, misses: 0 };
   const globalHeaders = behavior.headers || {};
   const retry = "retry" in behavior ? behavior.retry : 0;
+  const hooks = "hooks" in behavior ? behavior.hooks : {}; // got hooks
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
@@ -181,6 +182,7 @@ function buildFetch(behavior) {
         timeout: explicitTimeout || timeout,
         headers,
         cache: false,
+        hooks,
       };
 
       if (body && typeof body === "object") {

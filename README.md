@@ -109,6 +109,7 @@ poster("http://example.com/query", body, function (err, content) {
 * `requestTimeFn`: (default log with level `debug`) If given a function, it will be called when the request returned and processed from remote end.
 * `retry`: see [got](https://github.com/sindresorhus/got) for details, defaults to 0
 * `timeout`: see [got](https://github.com/sindresorhus/got) for details, defaults to 20000ms
+* `hooks`: see [got](https://github.com/sindresorhus/got) for details, defaults to empty object
 
 The difference between `freeze` and `deepFreeze` is that `deepFreeze` walks the object graph and freezes any
 child objects in the retrieved data. `freeze` only freezes the root object but still allows modifications
