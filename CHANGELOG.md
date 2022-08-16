@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.3.1
+
+Add _got_ `hooks` to behaviour
+
 # 5.2.1
 
 * Bump got from 11.8.3 to 11.8.5
