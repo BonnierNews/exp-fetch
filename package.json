@@ -33,7 +33,6 @@
     "exp-asynccache": "^2.0.0",
     "got": "^11.8.3",
     "lru-cache": "^6.0.0",
-    "verror": "^1.10.1",
     "xml2js": "^0.4.22"
   },
   "files": [

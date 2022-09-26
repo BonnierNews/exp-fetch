@@ -1,7 +1,6 @@
 "use strict";
 
 const got = require("got");
-const VError = require("verror");
 const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
 const util = require("util");
@@ -113,7 +112,7 @@ function buildFetch(behavior) {
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
 
     if (errorOnRemoteError) {
-      const error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
+      const error = new Error(`${url} yielded ${res.statusCode} (${util.inspect(content)})`);
       error.statusCode = res.statusCode;
 
       return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
@@ -221,7 +220,7 @@ function buildFetch(behavior) {
             return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
           }
         } else if (err instanceof got.TimeoutError) {
-          return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
+          return resolvedCallback(new Error("ESOCKETTIMEDOUT"));
         }
 
         return resolvedCallback(err);
@@ -232,7 +231,7 @@ function buildFetch(behavior) {
           const location = ensureAbsoluteUrl(response.headers, url);
           return performRequest(location, headers, explicitTimeout, method, body, redirectCount, callback);
         } else {
-          return callback(new VError("Maximum number of redirects exceeded while fetching", url));
+          return callback(new Error(`Maximum number of redirects exceeded while fetching ${url}`));
         }
       }
       callback(err, (performClone ? clone(response) : response));
