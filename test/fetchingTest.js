@@ -620,7 +620,7 @@ describe("fetch", () => {
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -635,7 +635,7 @@ describe("fetch", () => {
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No socket timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -655,7 +655,7 @@ describe("fetch", () => {
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No response timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -669,7 +669,7 @@ describe("fetch", () => {
 
       fetch({ url: host + path, timeout: 1 }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -686,7 +686,7 @@ describe("fetch", () => {
         timeout: { socket: 10 },
       }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -701,9 +701,10 @@ describe("fetch", () => {
         .get("/someotherpath")
         .delay(30)
         .reply(200, { some: "content" });
+
       fetch({ url: host + path, timeout: 1 }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
         done();
       });
     });
@@ -714,9 +715,23 @@ describe("fetch", () => {
         .get(path)
         .delay(30)
         .reply(200, { some: "content" });
+
       fetch({ url: host + path, timeout: 1 }).catch((err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.jse_cause.code).to.equal("ETIMEDOUT");
+        done();
+      });
+    });
+
+    it("should include the url that triggers timeout in the error", (done) => {
+      const fetch = fetchBuilder().fetch;
+      fake
+        .get(path)
+        .reply(200);
+
+      fetch({ url: host + path, timeout: 1 }, (err) => {
+        if (!err) return done(new Error("No timeout"));
+        expect(err.message).to.contain(`${host}${path} yielded timeout`);
         done();
       });
     });

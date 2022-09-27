@@ -1,6 +1,11 @@
 Changelog
 =========
 
+# 5.4.0
+
+* Pass the original error as cause when a timeout occurs
+* Add the url that triggers a timeout in the timeout error message
+
 # 5.3.1
 
 Add _got_ `hooks` to behaviour
