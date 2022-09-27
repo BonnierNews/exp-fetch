@@ -221,7 +221,7 @@ function buildFetch(behavior) {
             return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
           }
         } else if (err instanceof got.TimeoutError) {
-          return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
+          return resolvedCallback(new VError(err, "%s yielded timeout", url));
         }
 
         return resolvedCallback(err);
