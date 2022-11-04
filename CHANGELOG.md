@@ -3,6 +3,7 @@ Changelog
 
 # Unreleased
 
+* Bump node from 14 to 16
 * Bump eslint from 8.3.0 to 8.26.0
 * Bump eslint-config-exp from 0.2.0 to 0.5.0 and obey the new linting rules
 * Bump mocha from 9.2.0 to 10.1.0
