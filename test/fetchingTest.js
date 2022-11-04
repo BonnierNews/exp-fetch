@@ -399,10 +399,9 @@ describe("fetch", () => {
     });
 
     it("should cache with a lookup function", (done) => {
-      const url = require("url");
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
       function cacheKeyFn(key) {
-        return url.parse(key).path.replace(/\//g, "");
+        return new URL(key).pathname.replace(/\//g, "");
       }
 
       const fetch = fetchBuilder({ cacheKeyFn }).fetch;

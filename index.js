@@ -14,7 +14,6 @@ const initCache = require("./lib/initCache");
 const parseResponse = require("./lib/parseResponse");
 const calculateCacheKey = require("./lib/calculateCacheKey");
 const isRedirect = require("./lib/isRedirect");
-const ensureAbsoluteUrl = require("./lib/ensureAbsoluteUrl");
 const currentAppConfig = require("./lib/currentAppConfig");
 
 module.exports = buildFetch;
@@ -229,7 +228,7 @@ function buildFetch(behavior) {
     }, (err, response) => {
       if (followRedirect && isRedirect(response)) {
         if (redirectCount++ < maximumNumberOfRedirects) {
-          const location = ensureAbsoluteUrl(response.headers, url);
+          const location = new URL(response.headers.location, url).toString();
           return performRequest(location, headers, explicitTimeout, method, body, redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
