@@ -9,51 +9,87 @@ describe("fetch", () => {
   const fake = nock(host, { badheaders: [ "correlation-id", "x-correlation-id" ] });
   beforeEach(nock.cleanAll);
 
-  it("should support callbacks and promises", (done) => {
-    const fetch = fetchBuilder().fetch;
-    fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    fetch(host + path, (err, body) => {
-      if (err) return done(err);
-
-      expect(body).to.deep.equal({ some: "content" });
+  describe("Promise API", () => {
+    it("returns resolving promise on success", async () => {
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
 
-      fetch(host + path).then((body2) => {
-        expect(body2).to.deep.equal({ some: "content" });
-        done();
-      }, done);
+      const fetch = fetchBuilder().fetch;
+      const pendingResponse = fetch(host + path);
+
+      const awaitResponse = await pendingResponse;
+      expect(awaitResponse).to.deep.equal({ some: "content" });
+
+      return pendingResponse.then((thenResponse) => {
+        expect(thenResponse).to.deep.equal({ some: "content" });
+      });
+    });
+
+    it("returns rejecting promise on internal error", () => {
+      const fetch = fetchBuilder().fetch;
+
+      const invalidArgument = undefined;
+      return fetch(invalidArgument)
+        .then(() => undefined)
+        .catch((err) => err)
+        .then((rejection) => {
+          expect(rejection).to.exist;
+        });
     });
   });
 
-  it("should support all the verbs", async () => {
-    const request = fetchBuilder();
-    fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.get(host + path).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
+  describe("Callback API", () => {
+    it("runs callback with result on success", (done) => {
+      fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder().fetch;
+      fetch(host + path, (err, body) => {
+        expect(err).to.not.exist;
+        expect(body).to.deep.equal({ some: "content" });
+        done();
+      });
     });
-    fake.post(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.post(host + path, { foo: "bar" }).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
+
+    it("runs callback with error on internal error", (done) => {
+      const fetch = fetchBuilder().fetch;
+      const invalidArgument = undefined;
+      fetch(invalidArgument, {}, (err) => {
+        expect(err).to.exist;
+        done();
+      });
     });
-    fake.put(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.put(host + path, { foo: "bar" }).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
-    });
-    fake.patch(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.patch(host + path, { foo: "bar" }).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
-    });
-    fake.head(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.head(host + path).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
-    });
-    fake.options(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.options(host + path).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
-    });
-    fake.delete(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-    await request.del(host + path, { foo: "bar" }).then((body2) => {
-      expect(body2).to.deep.equal({ some: "content" });
+  });
+
+  describe("Verbs", () => {
+    it("should support all the verbs", async () => {
+      const request = fetchBuilder();
+      fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.get(host + path).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.post(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.post(host + path, { foo: "bar" }).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.put(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.put(host + path, { foo: "bar" }).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.patch(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.patch(host + path, { foo: "bar" }).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.head(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.head(host + path).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.options(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.options(host + path).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
+      fake.delete(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
+      await request.del(host + path, { foo: "bar" }).then((body2) => {
+        expect(body2).to.deep.equal({ some: "content" });
+      });
     });
   });
 
