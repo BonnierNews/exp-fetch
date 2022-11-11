@@ -1,7 +1,7 @@
 Changelog
 =========
 
-# Unreleased
+# 5.3.2
 
 * Catch and forward internal errors to callback or return as rejected promise
 * Bump node from 14 to 16
