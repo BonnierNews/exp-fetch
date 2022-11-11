@@ -239,46 +239,50 @@ function buildFetch(behavior) {
   }
 
   function fetch(method, options, optionalBody, resultCallback) {
-    let url = options;
-
-    const extraHeaders = {};
-
-    if (getCorrelationId) {
-      const correlationId = getCorrelationId();
-      if (correlationId) {
-        extraHeaders[correlationIdHeader] = correlationId;
-      }
-    }
-
-    const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
-    let explicitTimeout = null;
-    if (typeof options === "object") {
-      if (options.url) {
-        url = options.url;
-      }
-      if (options.timeout) {
-        explicitTimeout = options.timeout;
-      }
-    }
-
-    if (currentAppConfig.name) {
-      headers["x-exp-fetch-appname"] = currentAppConfig.name;
-    }
-
     if (typeof optionalBody === "function") {
       resultCallback = optionalBody;
       optionalBody = null;
     }
 
-    if (resultCallback) {
-      performRequest(url, headers, explicitTimeout, method, optionalBody, 0, resultCallback, onRequestInit);
-    } else {
-      return new Promise((resolve, reject) => {
-        performRequest(url, headers, explicitTimeout, method, optionalBody, 0, (err, content) => {
-          if (err) return reject(err);
-          return resolve(content);
-        }, onRequestInit);
-      });
+    try {
+      let url = options;
+
+      const extraHeaders = {};
+
+      if (getCorrelationId) {
+        const correlationId = getCorrelationId();
+        if (correlationId) {
+          extraHeaders[correlationIdHeader] = correlationId;
+        }
+      }
+
+      const headers = Object.assign({}, globalHeaders, options.headers, extraHeaders);
+      let explicitTimeout = null;
+      if (typeof options === "object") {
+        if (options.url) {
+          url = options.url;
+        }
+        if (options.timeout) {
+          explicitTimeout = options.timeout;
+        }
+      }
+
+      if (currentAppConfig.name) {
+        headers["x-exp-fetch-appname"] = currentAppConfig.name;
+      }
+
+      if (resultCallback) {
+        performRequest(url, headers, explicitTimeout, method, optionalBody, 0, resultCallback, onRequestInit);
+      } else {
+        return new Promise((resolve, reject) => {
+          performRequest(url, headers, explicitTimeout, method, optionalBody, 0, (err, content) => {
+            if (err) return reject(err);
+            return resolve(content);
+          }, onRequestInit);
+        });
+      }
+    } catch (err) {
+      return resultCallback ? resultCallback(err) : Promise.reject(err);
     }
 
     function onRequestInit() {
