@@ -617,6 +617,19 @@ describe("fetch", () => {
     });
   });
 
+  describe("user-agent header", () => {
+    it("should include user-agent and version from package.json", () => {
+      const fetch = fetchBuilder({ contentType: "json" }).fetch;
+      const packageInfo = require("../package.json");
+      fake
+        .get(path)
+        .matchHeader("User-Agent", `exp-fetch/${packageInfo.version}`)
+        .reply(200);
+
+      return fetch(host + path);
+    });
+  });
+
   describe("retry", () => {
     it("should retry if retry is specified in behavior", async () => {
       const fetch = fetchBuilder({

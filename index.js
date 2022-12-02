@@ -271,6 +271,12 @@ function buildFetch(behavior) {
         headers["x-exp-fetch-appname"] = currentAppConfig.name;
       }
 
+      if (!headers["User-Agent"]) {
+        const product = currentAppConfig.name || "exp-fetch";
+        const version = currentAppConfig.version || "1.0";
+        headers["User-Agent"] = `${product}/${version}`;
+      }
+
       if (resultCallback) {
         performRequest(url, headers, explicitTimeout, method, optionalBody, 0, resultCallback, onRequestInit);
       } else {
