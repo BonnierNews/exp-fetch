@@ -1,6 +1,12 @@
 Changelog
 =========
 
+# 6.0.0
+
+* Require node 18
+* Package clone replaced with global structuredClone
+* Package verror replaced with Error cause
+
 # 5.4.0
 
 * Default to seting User-Agent to calling application to play nice with generic logging tools
