@@ -275,8 +275,8 @@ function buildFetch(behavior) {
       }
 
       if (!headers["User-Agent"]) {
-        const { product, version } = currentAppConfig || expFetchConfig;
-        headers["User-Agent"] = `${product}/${version}`;
+        const { name, version } = currentAppConfig || expFetchConfig;
+        headers["User-Agent"] = `${name}/${version}`;
       }
 
       if (resultCallback) {
