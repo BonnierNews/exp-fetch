@@ -15,6 +15,9 @@ const parseResponse = require("./lib/parseResponse");
 const calculateCacheKey = require("./lib/calculateCacheKey");
 const isRedirect = require("./lib/isRedirect");
 const currentAppConfig = require("./lib/currentAppConfig");
+const path = require("path");
+
+const expFetchConfig = require(path.join(__dirname, "package.json"));
 
 module.exports = buildFetch;
 module.exports.initLRUCache = initCache;
@@ -272,8 +275,8 @@ function buildFetch(behavior) {
       }
 
       if (!headers["User-Agent"]) {
-        const product = currentAppConfig.name || "exp-fetch";
-        const version = currentAppConfig.version || "1.0";
+        const product = currentAppConfig.name || expFetchConfig.name;
+        const version = currentAppConfig.version || expFetchConfig.version;
         headers["User-Agent"] = `${product}/${version}`;
       }
 
