@@ -1,8 +1,11 @@
 {
   "name": "exp-fetch",
-  "version": "5.4.0",
+  "version": "6.0.0",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "test": "mocha -R dot",
     "posttest": "eslint . --cache"
@@ -29,11 +32,9 @@
     "nock": "^13.2.9"
   },
   "dependencies": {
-    "clone": "^2.1.1",
     "exp-asynccache": "^3.2.0",
     "got": "^11.8.6",
     "lru-cache": "^6.0.0",
-    "verror": "^1.10.1",
     "xml2js": "^0.4.22"
   },
   "files": [
