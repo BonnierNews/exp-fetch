@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.3.3
+
+* Bump dependencies
+
 # 5.3.2
 
 * Catch and forward internal errors to callback or return as rejected promise
