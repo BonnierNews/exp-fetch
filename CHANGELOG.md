@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.4.1
+
+* Bump deps to fix security audit.
+
 # 5.4.0
 
 * Default to seting User-Agent to calling application to play nice with generic logging tools
