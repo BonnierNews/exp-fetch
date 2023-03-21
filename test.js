@@ -34,6 +34,11 @@ const opt5 = {
   request: 1000,
 };
 
+const opt6 = {
+  socket,
+  request: 1,
+};
+
 async function main(opt, nbr) {
   const r = opt?.request;
   try {
@@ -46,7 +51,7 @@ async function main(opt, nbr) {
   }
 }
 
-const options = [ opt0, opt1, opt2, opt3, opt4, opt5 ];
+const options = [ opt0, opt1, opt2, opt3, opt4, opt5, opt6 ].sort(() => Math.random() - 0.5);
 
 async function run() {
   for await (const [ index, opt ] of Object.entries(options)) {
