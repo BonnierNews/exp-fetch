@@ -10,44 +10,24 @@ const behavior = {
   request: 1500,
 };
 const { fetch } = fetchBuilder(behavior);
-const timeout = 5000; // 5 seconds
-let startTimestamp;
+const TIMEOUT_MS = 5000; // 5 seconds
 
-console.time("fetchData");
-
-// Create a Promise that resolves when the fetch request completes.
-const fetchData = () => {
-  return new Promise((resolve, reject) => {
-    startTimestamp = Date.now();
-    fetch(url, { cache: null })
-      .then((response) => {
-        if (response.ok) {
-          resolve(response.json());
-        } else {
-          reject("Network reponse was not ok");
-        }
-      })
-      .catch((error) => reject(error));
-  });
-};
-
-// Use Promise.race() to create a timeout
-Promise.race([
-  fetchData(),
-  new Promise((_, reject) => setTimeout(() => reject("request time out"), timeout)),
-])
-  .then((data) => {
-    // Stop the time and log the elapsed time
-    console.timeEnd("fetchData");
-    console.log(data);
-  })
-  .catch((error) => {
-    // stop the timer and log the error
-    console.timeEnd("fetchData");
-    // console.log("error: ", error.code);
-
+async function fetchDataWithTimeout() {
+  const startTimestamp = Date.now();
+  try {
+    const response = await Promise.race([
+      fetch(url),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), TIMEOUT_MS)
+      ),
+    ]);
+    const data = await response.json();
+    console.log("Data:", data);
+  } catch (error) {
     const endTimestamp = Date.now();
     const elapsed = endTimestamp - startTimestamp;
-    console.log(`Request failed after ${elapsed}ms: ${error.message}`);
+    console.error(`Request failed after ${elapsed}ms: ${error.message}`);
+  }
+}
 
-  });
+fetchDataWithTimeout();
