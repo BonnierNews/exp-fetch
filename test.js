@@ -58,8 +58,8 @@ async function testFetchTimeout() {
     console.timeEnd("fetch took:");
 
     elapsed = date - elapsed;
-    if (elapsed > 1500) {
-      console.log(`Elapsed time (${elapsed}ms) is longer than 1500ms`);
+    if (elapsed > behavior.request) {
+      console.log(`Elapsed time (${elapsed}ms) is longer than ${behavior.request}`);
     } else {
       console.log(`Elapsed time (${elapsed})ms is shorter than request: ${behavior.request}`);
     }
