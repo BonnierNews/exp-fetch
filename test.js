@@ -18,7 +18,7 @@ const server = http.createServer((req, res) => {
       console.log("DATA: ", data);
       setTimeout(() => {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.write(JSON.stringify({ message: "Data received" }));
+        res.write(JSON.stringify({ message: "Data received", date: Date.now() }));
         res.end();
       }, SERVER_DELAY);
     });
@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(1337, () => {
-  console.log("Server listening on port 1337");
+  console.log(`Server listening on port 1337 with server delay: ${SERVER_DELAY / 1000}s`);
 });
 
 const fetchBuilder = require("./index");
@@ -34,35 +34,41 @@ const fetchBuilder = require("./index");
 const url = "http://localhost:1337";
 const behavior = {
   httpMethod: "POST",
+  // cache: null,
   socket: 1000,
   request: 1500,
 };
 
 const { fetch } = fetchBuilder(behavior);
-const TIMEOUT_MS = 2000; // 2 seconds
+// const TIMEOUT_MS = 10000; // 2 seconds
 
 async function testFetchTimeout() {
-  console.time("fetch");
+  console.time("fetch took:");
   try {
+    let elapsed = Date.now();
     const response = await Promise.race([
-      fetch(url, { cache: null, body: "{ test: 123 }" }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), TIMEOUT_MS)
-      ),
+      fetch(url, { body: "{ test: 123 }" }),
+      // new Promise((_, reject) =>
+      //   setTimeout(() => reject(new Error("Timeout")), TIMEOUT_MS)
+      // ),
     ]);
-    const data = await response.json();
-    console.timeEnd("fetch");
-    console.log("Data:", data);
-    const elapsed = Date.now() - response.headers.get("date");
+    const { message, date } = await response;
+    console.log("res message: ", message);
+    console.timeEnd("fetch took:");
+
+    elapsed = date - elapsed;
     if (elapsed > 1500) {
-      console.warn(`Elapsed time (${elapsed}ms) is longer than 1500ms`);
+      console.log(`Elapsed time (${elapsed}ms) is longer than 1500ms`);
+    } else {
+      console.log(`Elapsed time (${elapsed})ms is shorter than request: ${behavior.request}`);
     }
   } catch (error) {
-    console.timeEnd("fetch");
+    // console.timeEnd("fetch");
     console.error(error.message);
   }
 }
 
 testFetchTimeout().then(() => {
   console.log("Test complete");
+  process.exit(0);
 });
