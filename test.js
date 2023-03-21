@@ -4,59 +4,50 @@
 const fetchBuilder = require("./index");
 
 const url = "https://make-a-timeout.nu";
-const socket = 1000;
-const cache = null;
-
-const opt0 = {};
-
-const opt1 = {
-  socket,
+const behavior = {
+  httpMethod: "POST",
+  socket: 1000,
   request: 1500,
 };
+const { fetch } = fetchBuilder(behavior);
+const timeout = 5000; // 5 seconds
+let startTimestamp;
 
-const opt2 = {
-  socket,
-  request: 200000,
+console.time("fetchData");
+
+// Create a Promise that resolves when the fetch request completes.
+const fetchData = () => {
+  return new Promise((resolve, reject) => {
+    startTimestamp = Date.now();
+    fetch(url, { cache: null })
+      .then((response) => {
+        if (response.ok) {
+          resolve(response.json());
+        } else {
+          reject("Network reponse was not ok");
+        }
+      })
+      .catch((error) => reject(error));
+  });
 };
 
-const opt3 = {
-  socket,
-  request: 400000,
-};
+// Use Promise.race() to create a timeout
+Promise.race([
+  fetchData(),
+  new Promise((_, reject) => setTimeout(() => reject("request time out"), timeout)),
+])
+  .then((data) => {
+    // Stop the time and log the elapsed time
+    console.timeEnd("fetchData");
+    console.log(data);
+  })
+  .catch((error) => {
+    // stop the timer and log the error
+    console.timeEnd("fetchData");
+    // console.log("error: ", error.code);
 
-const opt4 = {
-  socket,
-  request: 500,
-};
+    const endTimestamp = Date.now();
+    const elapsed = endTimestamp - startTimestamp;
+    console.log(`Request failed after ${elapsed}ms: ${error.message}`);
 
-const opt5 = {
-  socket,
-  request: 1000,
-};
-
-const opt6 = {
-  socket,
-  request: 1,
-};
-
-async function main(opt, nbr) {
-  const r = opt?.request;
-  try {
-    const { fetch } = fetchBuilder(opt);
-    console.time(`opt${nbr} request: ${r}`);
-    await fetch(url, { cache });
-  } catch (error) {
-    // console.log("error");
-    console.timeEnd(`opt${nbr} request: ${r}`);
-  }
-}
-
-const options = [ opt0, opt1, opt2, opt3, opt4, opt5, opt6 ].sort(() => Math.random() - 0.5);
-
-async function run() {
-  for await (const [ index, opt ] of Object.entries(options)) {
-    await main(opt, index);
-  }
-}
-
-run();
+  });
