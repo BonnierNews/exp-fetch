@@ -230,3 +230,40 @@ var behavior = {};
 var stats = fetchBuilder(behavior).stats;
 console.log("Hit ratio", stats().cacheHitRatio);
 ```
+
+
+## Timeout
+Example:
+If you know the server response time is 3 seconds or 3000 ms you can configure exp-fetch timeout the following way.
+```
+timeout: {
+    socket: 3500,
+    request: 4000,   
+}
+```
+NOTE: This is are rare case. If have absolute control over responding server and have access to modify the timeout. See examples/timeout.js (to run copy the file to root and run with node). 
+
+NOTE: To fetch will go fine when you run `node timeout.js` in root. But if you lower the timeout options of socket to 3000 ms or 3 s then you will get an `ESOCKETTIMEDOUT` error. This means that the socket option needs to be higher then the server delay and the request option needs to be higher than the timout socket value for the timout options to work. 
+
+In most cases you would not have control over the responding server. In that case you need to add some retry logic see the examples/retry.js
+```
+  retry: {
+    limit: 3,
+    methods: [ "POST" ],
+    statusCodes: [ 408, 500, 502, 503, 504 ],
+    maxRetryAfter: 4000,
+  },
+```
+
+| property | values | description |
+|----------|:------:|-------------|
+| limit    |   3    | The maximum amount of times to retry the request. |
+| methods | [ "POST" ], | The HTTP methods that should be retried. |
+| statusCodes | [ 408, 500, 502, 503, 504 ] | The HTTP status codes that should be retried. |
+| maxRetryAfter | 4000 | The maximum amount of time in milliseconds that the request should be retried after. |
+
+These values and property are examples and you can tweek and find other implementations based on your use case.
+
+NOTE: You can copy the examples/retry.js to root and run it with node `node retry.js` In retry.js script the server delay is simulated to be delayed and different timout:s are passed to the server response, which should be a more relastic scenario. 
+
+NOTE: Basically if you have a timout configuration that starts to throw `ESOCKETTIMEDOUT` error you can try to add some retry logic. The timout option can be left in place and will work if server timout does not increase. If server timeout would increase then the retry options would kick in and rescue the fetch.
