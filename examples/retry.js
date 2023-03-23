@@ -64,7 +64,7 @@ async function testRetry() {
   console.time("fetch took:");
   try {
     let elapsed = Date.now();
-    const response = await fetch(url, { body: "{ test: 123 }" })
+    const response = await fetch(url, { body: "{ test: 123 }" });
     const { message, date } = await response;
     console.log("res message: ", message);
     console.timeEnd("fetch took:");
