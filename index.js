@@ -223,10 +223,8 @@ function buildFetch(behavior) {
             return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
           }
         } else if (err instanceof got.TimeoutError) {
-          if (Object.keys(options.timeout).includes("request") && Object.keys(options.timeout).includes("socket")) {
-            const { timeout: { socket, request: req } } = options;
-            logger.info(`Expected server response is greater than timeout option for socket: ${socket} ms and request: ${req} ms`);
-          }
+          const { timeout: timeoutOptions } = options ?? {};
+          logger.debug(`Update current timeout options: ${JSON.stringify(timeoutOptions, null, 2)}`);
           return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
         }
 
