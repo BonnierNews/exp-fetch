@@ -241,7 +241,7 @@ timeout: {
     request: 4000,   
 }
 ```
-NOTE: This is are rare case. If have absolute control over responding server and have access to modify the timeout. See examples/timeout.js (to run copy the file to root and run with node). 
+NOTE: This is a rare case. If have absolute control over responding server and have access to modify the timeout. See examples/timeout.js (to run copy the file to root and run with node). 
 
 NOTE: To fetch will go fine when you run `node timeout.js` in root. But if you lower the timeout options of socket to 3000 ms or 3 s then you will get an `ESOCKETTIMEDOUT` error. This means that the socket option needs to be higher then the server delay and the request option needs to be higher than the timout socket value for the timout options to work. 
 
