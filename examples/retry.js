@@ -3,7 +3,6 @@
 "use strict";
 
 const http = require("http");
-// TODO: Göra en lista av olika typer av längd för att utöka testet.
 const SERVER_DELAY = 3000; // 3 seconds delay
 const someDelays = [ 4000, 5000, 2000, 3000 ];
 const SERVER_DELAYS = [ SERVER_DELAY, ...someDelays ];
