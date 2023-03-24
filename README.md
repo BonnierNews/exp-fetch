@@ -264,6 +264,6 @@ In most cases you would not have control over the responding server. In that cas
 
 These values and property are examples and you can tweak and find other implementations based on your use case.
 
-NOTE: You can copy the examples/retry.js to root and run it with node `node retry.js` In retry.js script the server delay is simulated to be delayed and different timout:s are passed to the server response, which should be a more relastic scenario. 
+NOTE: You can copy the examples/retry.js to root and run it with node `node retry.js` In retry.js script the server delay is simulated to be delayed and different timeouts are passed to the server response, which should be a more relastic scenario. 
 
 NOTE: Basically if you have a timout configuration that starts to throw `ESOCKETTIMEDOUT` error you can try to add some retry logic. The timout option can be left in place and will work if server timout does not increase. If server timeout would increase then the retry options would kick in and rescue the fetch.
