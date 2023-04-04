@@ -234,16 +234,26 @@ console.log("Hit ratio", stats().cacheHitRatio);
 
 ## Timeout
 Example:
-If you know the server response time is 3 seconds or 3000 ms you can configure exp-fetch timeout the following way.
+When setting up the exp-fetch timeout configuration, you can adjust the values of "socket" and "request" to ensure that the request doesn't exceed a predetermined response time. For example, if you know that the server response time is 3 seconds or 3000 milliseconds, you may want to choose values just slightly higher than 3 seconds.
+
+In this case, the configuration code would look like the following:
 ```
 timeout: {
-    socket: 3500,
-    request: 4000,   
+    socket: 3500, // slightly higher than 3 seconds
+    request: 4000, // slightly higher than 3 seconds 
 }
-```
-NOTE: This is a rare case. If have absolute control over responding server and have access to modify the timeout. See examples/timeout.js (to run copy the file to root and run with node). 
+The values of 3500 and 4000 milliseconds are chosen because they are just higher than the expected server response time of 3000 milliseconds. By setting the values in this way, the request will timeout if the server takes longer than expected to respond.
 
-NOTE: To fetch will go fine when you run `node timeout.js` in root. But if you lower the timeout options of socket to 3000 ms or 3 s then you will get an `ESOCKETTIMEDOUT` error. This means that the socket option needs to be higher than the server delay and the request option needs to be higher then the timout socket value for the timout options to work. 
+```
+Please note that the situation described below is uncommon. However, if you have complete control over the responding server and can modify the timeout, you may be interested in the following information.
+
+In such a case, you can refer to the example file located at examples/timeout.js. To run this file, simply copy it to the root directory and execute it with Node.
+
+It's worth noting that having control over the responding server and its timeout can provide more flexibility and customization options for your requests.
+
+Please note that running the node timeout.js command in the root directory should result in a successful fetch. However, if you decrease the timeout value of the "socket" option to 3000 milliseconds or 3 seconds, you will encounter an ESOCKETTIMEDOUT error.
+
+This error indicates that the "socket" option must be set to a value higher than the server delay, and the "request" option must be set to a value higher than the timeout value of the "socket" option for the timeout options to function properly.
 
 In most cases you would not have control over the responding server. In that case you need to add some retry logic see the examples/retry.js
 ```
