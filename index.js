@@ -223,6 +223,9 @@ function buildFetch(behavior) {
             return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
           }
         } else if (err instanceof got.TimeoutError) {
+          const { message, timings } = err;
+          logger.debug(`Message: ${message}`);
+          logger.debug(`Timings: ${JSON.stringify(timings, null, 2)}`);
           return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
         }
 

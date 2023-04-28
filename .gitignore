@@ -26,3 +26,5 @@ coverage
 
 .eslintcache
 *.sw[a-z]
+
+.DS_Store

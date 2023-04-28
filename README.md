@@ -230,3 +230,50 @@ var behavior = {};
 var stats = fetchBuilder(behavior).stats;
 console.log("Hit ratio", stats().cacheHitRatio);
 ```
+
+
+## Timeout
+Example:
+When setting up the exp-fetch timeout configuration, you can adjust the values of "socket" and "request" to ensure that the request doesn't exceed a predetermined response time. For example, if you know that the server response time is 3 seconds or 3000 milliseconds, you may want to choose values just slightly higher than 3 seconds.
+
+In this case, the configuration code would look like the following:
+```
+timeout: {
+    socket: 3500, // slightly higher than 3 seconds
+    request: 4000, // slightly higher than 3 seconds 
+}
+The values of 3500 and 4000 milliseconds are chosen because they are just higher than the expected server response time of 3000 milliseconds. By setting the values in this way, the request will timeout if the server takes longer than expected to respond.
+
+```
+Please note that the situation described below is uncommon. However, if you have complete control over the responding server and can modify the timeout, you may be interested in the following information.
+
+In such a case, you can refer to the example file located at examples/timeout.js. To run this file, simply copy it to the root directory and execute it with Node.
+
+It's worth noting that having control over the responding server and its timeout can provide more flexibility and customization options for your requests.
+
+Please note that running the node timeout.js command in the root directory should result in a successful fetch. However, if you decrease the timeout value of the "socket" option to 3000 milliseconds or 3 seconds, you will encounter an ESOCKETTIMEDOUT error.
+
+This error indicates that the "socket" option must be set to a value higher than the server delay, and the "request" option must be set to a value higher than the timeout value of the "socket" option for the timeout options to function properly.
+
+In most cases you would not have control over the responding server. In that case you need to add some retry logic see the examples/retry.js
+```
+  retry: {
+    limit: 3,
+    methods: [ "POST" ],
+    statusCodes: [ 408, 500, 502, 503, 504 ],
+    maxRetryAfter: 4000,
+  },
+```
+
+| property | values | description |
+|----------|:------:|-------------|
+| limit    |   3    | The maximum amount of times to retry the request. |
+| methods | [ "POST" ], | The HTTP methods that should be retried. |
+| statusCodes | [ 408, 500, 502, 503, 504 ] | The HTTP status codes that should be retried. |
+| maxRetryAfter | 4000 | The maximum amount of time in milliseconds that the request should be retried after. |
+
+These values and property are examples and you can tweak and find other implementations based on your use case.
+
+NOTE: You can copy the examples/retry.js to root and run it with node `node retry.js` In retry.js script the server delay is simulated to be delayed and different timeouts are passed to the server response, which should be a more relastic scenario. 
+
+NOTE: Basically if you have a timout configuration that starts to throw `ESOCKETTIMEDOUT` error you can try to add some retry logic. The timout option can be left in place and will work if server timout does not increase. If server timeout would increase then the retry options would kick in and rescue the fetch.
