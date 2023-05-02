@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.4.2
+* Ignore .DS_Store and document fetch retry and timeout config in README.
+* Bump deps to fix security audit.
+
 # 5.4.1
 
 * Bump deps to fix security audit.
