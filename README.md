@@ -7,6 +7,8 @@ A small and pluggable lib to fetch a resource and cache the result.
 ### Usage
 By default fetch will treat all response codes except 200, 301 and 404 as errors. 404 will yield `null` and 200 the body.
 
+By default, responses will be parsed as JSON. To fetch plain text - specify a `contentType` (see [behavior options](#allowed-behavior-options-for-fetchbuilder) )
+
 #### Caching
 
 Fetch will parse the `cache-control` header. If fetch encounters `private`, `no-cache`, `max-age=0` or `must-revalidate` it wont cache. Otherwise
@@ -31,6 +33,7 @@ var behavior = {};
 var fetch = fetchBuilder(behavior).fetch;
 fetch("http://example.com/resource.json").then(function (content) {
     // Do something with the result
+    const json = content;
 });
 ```
 
@@ -48,6 +51,32 @@ var options = {
 }
 fetch(options, function (err, content) {
     // Do something with the result
+});
+```
+
+#### Specifying contentType
+
+To fetch XML parsed to a JSON response
+
+```javascript
+var fetchBuilder = require("exp-fetch");
+var behavior = { contentType: "xml" };
+var fetch = fetchBuilder(behavior).fetch;
+fetch("http://example.com/resource.xml", function (err, content) {
+  //Do something with the result (it will be JSON-formatted)
+  const json = content;
+});
+```
+
+To fetch plain text or html
+
+```javascript
+var fetchBuilder = require("exp-fetch");
+var behavior = { contentType: "text" };
+var fetch = fetchBuilder(behavior).fetch;
+fetch("http://example.com", function (err, content) {
+  // Do something with the result (which will be a string)
+  const textString = content;
 });
 ```
 
@@ -84,7 +113,9 @@ poster("http://example.com/query", body, function (err, content) {
 });
 ```
 
-### Allowed behavior options
+### Allowed behavior options for `fetchBuilder`
+
+Note: these options are used for the `fetchBuilder`, not the `fetch`-function
 
 * `agent`: (default: null), keepAlive Agent instance.
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
@@ -92,7 +123,7 @@ poster("http://example.com/query", body, function (err, content) {
 * `cacheNotFound`: (default: false). If set it will cache 404s, if given a number it will cache the 404 for that time. If the `maxAgeFn` is given, it will get this time as the first parameter.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
-* `contentType`: (default: `json`), expected content type. Fetch will try to parse the given content type. (supported: `xml`|`json`)
+* `contentType`: (default: `json`), expected content type. When set to `xml` the response will be parsed from XML to JSON. Other standard content-type values such as `text` or `text/html` are also accepted.
 * `getCorrelationId`: (default: `null`), for each request call this function to pass as the correlation id header specified below. Does not pass correlation id if function is not defined or if it returns null.
 * `correlationIdHeader`: (default: `correlation-id`), header to use when passing correlation id.
 * `deepFreeze`: (default:`false`). When this option is set to true it will freeze the response _recursively_ so that it or any objects it contains can't be modified. ("use strict" is needed)

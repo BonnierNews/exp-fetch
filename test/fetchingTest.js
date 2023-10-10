@@ -602,6 +602,16 @@ describe("fetch", () => {
         done(err);
       });
     });
+
+    it("should fetch plain text", (done) => {
+      const fetch = fetchBuilder({ contentType: "text" }).fetch;
+      const textResponse = "This is just plain text";
+      fake.get(path).reply(200, textResponse, { ContentType: "text/html" });
+      fetch(host + path, (err, body) => {
+        expect(body).to.deep.equal("This is just plain text");
+        done(err);
+      });
+    });
   });
 
   describe("app name header", () => {
