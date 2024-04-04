@@ -156,7 +156,7 @@ function buildFetch(behavior) {
     return resolvedCallback(null, cacheValueFn(content, res.headers, res.statusCode), maxAge);
   }
 
-  function handleRedirect(url, cacheKey, res, body, resolvedCallback) {
+  function handleRedirect(cacheKey, res, body, resolvedCallback) {
     const maxAge = maxAgeFn(getMaxAge(res.headers["cache-control"]), cacheKey, res, body);
 
     const content = {
@@ -211,7 +211,7 @@ function buildFetch(behavior) {
       }
 
       return request(options).then((res) => {
-        if (isRedirect(res)) return handleRedirect(url, cacheKey, res, res.body, resolvedCallback);
+        if (isRedirect(res)) return handleRedirect(cacheKey, res, res.body, resolvedCallback);
         return parseResponse(res.body, contentType, (_, transformed) => {
           return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
         });
