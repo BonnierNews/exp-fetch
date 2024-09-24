@@ -1,6 +1,12 @@
 Changelog
 =========
 
+# 5.5.0
+
+* Added a third argument to `cacheKeyFn` containing the headers to enable using headers as part
+  of the cache key.
+* Removed unused `url` param from `handleRedirect`.
+
 # 5.4.2
 * Ignore .DS_Store and document fetch retry and timeout config in README.
 * Bump deps to fix security audit.

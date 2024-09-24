@@ -2,6 +2,7 @@
 
 const nock = require("nock");
 const fetchBuilder = require("../.");
+const crypto = require("crypto");
 
 describe("fetch", () => {
   const host = "http://example.com";
@@ -448,6 +449,27 @@ describe("fetch", () => {
       ]).then((result) => {
         expect(result[0]).to.deep.equal({ some: "content" });
         expect(result[0]).to.deep.equal(result[1]).eql(result[2]);
+        done();
+      }, done);
+    });
+
+    it("should cache with a lookup function using the headers", (done) => {
+      fake.get(path).matchHeader("foo", "foo").reply(200, { some: "content" }, { "cache-control": "max-age=30" });
+      fake.get(path).matchHeader("foo", "foo2").reply(200, { some: "content2" }, { "cache-control": "max-age=30" });
+      function cacheKeyFn(url, body, headers) {
+        const cacheKey = crypto.createHash("md5").update(`${url} ${headers.foo}`).digest("hex");
+        return cacheKey;
+      }
+
+      const fetch = fetchBuilder({ cacheKeyFn }).fetch;
+      Promise.all([
+        fetch({ url: host + path, headers: { foo: "foo" } }),
+        fetch({ url: host + path, headers: { foo: "foo2" } }),
+        fetch({ url: host + path, headers: { foo: "foo2" } }),
+        fetch({ url: host + path, headers: { foo: "foo" } }),
+      ]).then((result) => {
+        expect(result[0]).to.deep.equal({ some: "content" }).eql(result[3]);
+        expect(result[1]).to.deep.equal({ some: "content2" }).eql(result[2]);
         done();
       }, done);
     });

@@ -167,7 +167,7 @@ function buildFetch(behavior) {
   }
 
   function performRequest(url, headers, explicitTimeout, method, body, redirectCount, callback, onRequestInit) {
-    const cacheKey = cacheKeyFn(url, body);
+    const cacheKey = cacheKeyFn(url, body, headers);
     const startTime = new Date().getTime();
     stats.calls++;
     cache.lookup(cacheKey, (resolveFunction) => {
