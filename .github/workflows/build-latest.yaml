@@ -1,4 +1,4 @@
-name: CI
+name: Build latest
 
 on:
   push:
@@ -10,11 +10,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - label: "nvmrc"
             use_nvmrc: true
-          - label: "node18"
+          - label: "node14 (legacy)"
+            node: "14.x"
+            allow_failure: true
+          - label: "node16 (legacy)"
+            node: "16.x"
+            allow_failure: true
+          - label: "node18 (min-supported)"
             node: "18.x"
           - label: "node20"
             node: "20.x"
@@ -22,19 +29,22 @@ jobs:
             node: "22.x"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node from .nvmrc
         if: ${{ matrix.use_nvmrc }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+          cache: 'npm'
 
       - name: Use Node ${{ matrix.node }}
         if: ${{ !matrix.use_nvmrc }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: 'npm'
 
       - run: npm ci
       - run: npm test
+        continue-on-error: ${{ matrix.allow_failure || false }}
