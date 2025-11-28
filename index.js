@@ -6,7 +6,7 @@ const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
 const util = require("util");
 
-const getMaxAge = require("./lib/maxAgeFromHeader.js");
+const getMaxAge = require("./lib/maxAgeFromHeader");
 const dummyLogger = require("./lib/dummyLogger");
 const isNumber = require("./lib/isNumber");
 const dummyCache = require("./lib/dummyCache");
@@ -19,6 +19,8 @@ const path = require("path");
 
 const expFetchConfig = require(path.join(__dirname, "package.json"));
 
+const MAXIMUM_NUMBER_OF_REDIRECTS = 10;
+
 module.exports = buildFetch;
 module.exports.initLRUCache = initCache;
 
@@ -26,64 +28,42 @@ function buildFetch(behavior) {
   behavior = behavior || {};
 
   // Options
-  let freeze = true;
-  let deepFreeze = false;
-  let cache = new AsyncCache(initCache({ age: 60 }));
+  const cache = hasOwnProperty(behavior, "cache")
+    ? behavior.cache || dummyCache
+    : new AsyncCache(initCache({ age: 60 }));
+  const cacheNotFound = hasOwnProperty(behavior, "cacheNotFound")
+    ? behavior.cacheNotFound
+    : false;
+  const retry = hasOwnProperty(behavior, "retry") ? behavior.retry : 0;
+  const hooks = hasOwnProperty(behavior, "hooks") ? behavior.hooks : {};
   const cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
   const cacheValueFn = behavior.cacheValueFn || passThrough;
   const maxAgeFn = behavior.maxAgeFn || passThrough;
   const onNotFound = behavior.onNotFound;
   const onError = behavior.onError;
   const onSuccess = behavior.onSuccess;
-  let cacheNotFound = false;
   const logger = behavior.logger || dummyLogger();
   const getCorrelationId = behavior.getCorrelationId;
   const correlationIdHeader = behavior.correlationIdHeader || "correlation-id";
-  let errorOnRemoteError = true;
   const contentType = (behavior.contentType || "json").toLowerCase();
   const keepAliveAgent = behavior.agent;
-  let followRedirect = true;
-  let performClone = true;
-  const maximumNumberOfRedirects = 10;
   const httpMethod = (behavior.httpMethod || "GET").toUpperCase();
   const timeout = behavior.timeout || 20000;
   const stats = { calls: 0, misses: 0 };
   const globalHeaders = behavior.headers || {};
-  const retry = "retry" in behavior ? behavior.retry : 0;
-  const hooks = "hooks" in behavior ? behavior.hooks : {}; // got hooks
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
   }
   const requestTimeFn = behavior.requestTimeFn || defaultRequestTimeFn;
 
-  if (Object.prototype.hasOwnProperty.call(behavior, "clone")) {
-    performClone = !!behavior.clone;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "freeze")) {
-    freeze = !!behavior.freeze;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "deepFreeze")) {
-    deepFreeze = !!behavior.deepFreeze;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "followRedirect")) {
-    followRedirect = !!behavior.followRedirect;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "errorOnRemoteError")) {
-    errorOnRemoteError = !!behavior.errorOnRemoteError;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "cacheNotFound")) {
-    cacheNotFound = behavior.cacheNotFound;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(behavior, "cache")) {
-    cache = behavior.cache || dummyCache;
-  }
+  const {
+    clone: performClone,
+    freeze,
+    deepFreeze,
+    followRedirect,
+    errorOnRemoteError,
+  } = getBooleanOptions(behavior);
 
   function handleNotFound(url, cacheKey, res, content, resolvedCallback) {
     logger.info("404 Not Found for: %j", url);
@@ -233,9 +213,9 @@ function buildFetch(behavior) {
       });
     }, (err, response) => {
       if (followRedirect && isRedirect(response)) {
-        if (redirectCount++ < maximumNumberOfRedirects) {
+        if (redirectCount < MAXIMUM_NUMBER_OF_REDIRECTS) {
           const location = new URL(response.headers.location, url).toString();
-          return performRequest(location, headers, explicitTimeout, method, body, redirectCount, callback);
+          return performRequest(location, headers, explicitTimeout, method, body, ++redirectCount, callback);
         } else {
           return callback(new VError("Maximum number of redirects exceeded while fetching", url));
         }
@@ -320,6 +300,28 @@ function buildFetch(behavior) {
   });
 
   return fetcher;
+}
+
+function getBooleanOptions(behavior) {
+  const options = {
+    clone: true,
+    freeze: true,
+    deepFreeze: false,
+    followRedirect: true,
+    errorOnRemoteError: true,
+  };
+
+  for (const key in options) {
+    if (hasOwnProperty(behavior, key)) {
+      options[key] = !!behavior[key];
+    }
+  }
+
+  return options;
+}
+
+function hasOwnProperty(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
 function passThrough(key) {
