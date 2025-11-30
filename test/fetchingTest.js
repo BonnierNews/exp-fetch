@@ -126,7 +126,7 @@ describe("fetch", () => {
       fetch(options).then((body) => {
         expect(body).to.deep.equal({ some: "content" });
         done();
-      });
+      }).catch(done);
     });
 
     it("should pass request headers on to redirects", (done) => {
@@ -450,7 +450,7 @@ describe("fetch", () => {
         expect(result[0]).to.deep.equal({ some: "content" });
         expect(result[0]).to.deep.equal(result[1]).eql(result[2]);
         done();
-      }, done);
+      }).catch(done);
     });
 
     it("should cache with a lookup function using the headers", (done) => {
@@ -471,7 +471,7 @@ describe("fetch", () => {
         expect(result[0]).to.deep.equal({ some: "content" }).eql(result[3]);
         expect(result[1]).to.deep.equal({ some: "content2" }).eql(result[2]);
         done();
-      }, done);
+      }).catch(done);
     });
 
     it("should cache with a custom value function", (done) => {
@@ -499,19 +499,23 @@ describe("fetch", () => {
 
     it("should cache with a custom maxAgeFn", (done) => {
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
-      function maxAgeFn(/* maxAge, key, headers, content */) {
+      function maxAgeFn() {
         return -1;
       }
 
-      const fetch = fetchBuilder({ maxAgeFn }).fetch;
+      const { fetch, stats } = fetchBuilder({ maxAgeFn });
       fetch(host + path).then((content0) => {
-        fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
+        fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
         expect(content0).to.deep.equal({ some: "content" });
         fetch(host + path).then((content1) => {
-          expect(content1).to.deep.equal({ some: "contentz" });
+          expect(content1).to.deep.equal({ some: "content" });
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0,
+          });
           done();
-        }, done);
-      }, done);
+        }).catch(done);
+      }).catch(done);
     });
 
     it("should cache with a custom maxAgeFn on errors", (done) => {
@@ -525,51 +529,108 @@ describe("fetch", () => {
     });
 
     it("should not cache 404s by default", (done) => {
-      const fetch = fetchBuilder().fetch;
+      const { fetch, stats } = fetchBuilder();
       fake.get(path).reply(404);
       fetch(host + path, () => {
         fake.get(path).reply(200, { some: "content" });
         fetch(host + path, (err, body) => {
           expect(body).to.deep.equal({ some: "content" });
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0,
+          });
           done(err);
         });
       });
     });
 
-    it("should cache 404s if it has cacheNotFound set", (done) => {
-      const fetch = fetchBuilder({ cacheNotFound: 1000 }).fetch;
+    it("should cache 404s if cacheNotFound is a number", (done) => {
+      const { fetch, stats } = fetchBuilder({ cacheNotFound: 1000 });
       fake.get(path).reply(404);
       fetch(host + path, () => {
         fake.get(path).reply(200, { some: "content" });
         fetch(host + path, (err, body) => {
           expect(body).to.equal(null);
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0.5,
+          });
+          done(err);
+        });
+      });
+    });
+
+    it("should cache 404s if cacheNotFound is \"true\"", (done) => {
+      const { fetch, stats } = fetchBuilder({ cacheNotFound: true });
+      fake.get(path).reply(404, null, { "cache-control": "max-age=30" });
+      fetch(host + path, () => {
+        fake.get(path).reply(200, { some: "content" });
+        fetch(host + path, (err, body) => {
+          expect(body).to.equal(null);
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0.5,
+          });
+          done(err);
+        });
+      });
+    });
+
+    it("should not cache 404s if cacheNotFound is \"false\"", (done) => {
+      const { fetch, stats } = fetchBuilder({ cacheNotFound: false });
+      fake.get(path).reply(404);
+      fetch(host + path, () => {
+        fake.get(path).reply(200, { some: "content" });
+        fetch(host + path, (err, body) => {
+          expect(body).to.deep.equal({ some: "content" });
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0,
+          });
           done(err);
         });
       });
     });
 
     it("should override cacheNotFound with maxAgeFn", (done) => {
-      function maxAgeFn(maxAge, cacheKey, res) {
-        if (res.statusCode === 404) {
-          return 1000;
-        }
-        return maxAge;
+      function maxAgeFn() {
+        return 1000;
       }
 
-      const fetch = fetchBuilder({ cacheNotFound: -1, maxAgeFn }).fetch;
+      const { fetch, stats } = fetchBuilder({ cacheNotFound: -1, maxAgeFn });
       fake.get(path).reply(404);
       fetch(host + path, () => {
         fake.get(path).reply(200, { some: "content" });
         fetch(host + path, (err, body) => {
           expect(body).to.be.null;
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0.5,
+          });
           done(err);
         });
       });
     });
 
     it("should not cache errors with empty response", (done) => {
-      const fetch = fetchBuilder().fetch;
+      const { fetch, stats } = fetchBuilder();
       fake.get(path).reply(500);
+      fetch(host + path, () => {
+        fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
+        fetch(host + path, (err, body) => {
+          expect(body).to.deep.equal({ some: "content" });
+          expect(stats()).to.deep.equal({
+            calls: 2,
+            cacheHitRatio: 0,
+          });
+          done(err);
+        });
+      });
+    });
+
+    it("should not cache errors with string response", (done) => {
+      const fetch = fetchBuilder().fetch;
+      fake.get(path).reply(500, "Internal Error");
       fetch(host + path, () => {
         fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
         fetch(host + path, (err, body) => {
@@ -584,18 +645,6 @@ describe("fetch", () => {
       fake.get(path).reply(500);
       fetch(host + path, (err) => {
         done(err);
-      });
-    });
-
-    it("should not cache errors with string response", (done) => {
-      const fetch = fetchBuilder().fetch;
-      fake.get(path).reply(500, "Internal Error");
-      fetch(host + path, () => {
-        fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
-        fetch(host + path, (err, body) => {
-          expect(body).to.deep.equal({ some: "contentz" });
-          done(err);
-        });
       });
     });
   });
@@ -841,7 +890,7 @@ describe("fetch", () => {
       fetch(options).then((body) => {
         expect(body).to.deep.equal({ some: "content" });
         done();
-      });
+      }).catch(done);
     });
 
     it("should pass request headers on to redirects", (done) => {

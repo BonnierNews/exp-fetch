@@ -31,9 +31,7 @@ function buildFetch(behavior) {
   const cache = hasOwnProperty(behavior, "cache")
     ? behavior.cache || dummyCache
     : new AsyncCache(initCache({ age: 60 }));
-  const cacheNotFound = hasOwnProperty(behavior, "cacheNotFound")
-    ? behavior.cacheNotFound
-    : false;
+  const cacheNotFound = behavior.cacheNotFound;
   const retry = hasOwnProperty(behavior, "retry") ? behavior.retry : 0;
   const hooks = hasOwnProperty(behavior, "hooks") ? behavior.hooks : {};
   const cacheKeyFn = behavior.cacheKeyFn || calculateCacheKey;
@@ -72,9 +70,11 @@ function buildFetch(behavior) {
     if (onNotFound) {
       onNotFound(url, cacheKey, res, content);
     }
+
     if (cacheNotFound) {
       notFoundAge = isNumber(cacheNotFound) ? Number(cacheNotFound) : getMaxAge(res.headers["cache-control"]);
     }
+
     notFoundAge = maxAgeFn(notFoundAge, cacheKey, res, content);
     return resolvedCallback(null, cacheValueFn(null, res.headers, res.statusCode), notFoundAge);
   }
