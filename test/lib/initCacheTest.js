@@ -3,7 +3,7 @@
 const initCache = require("../../lib/initCache");
 
 describe("initCache", () => {
-  it("should init a disabled cache if disabled", () => {
+  it("should initialize a disabled cache if disabled", () => {
     const cache = initCache({ disabled: true });
     cache.set("key", "value");
 
@@ -23,8 +23,8 @@ describe("initCache", () => {
     expect(cache.reset()).to.be.undefined;
   });
 
-  it("should set the max on size param", () => {
-    const cache = initCache({ size: 1, age: 1000, length: wrap(1) });
+  it("should set the max cache size from the `size` parameter", () => {
+    const cache = initCache({ size: 1, age: 1000, length: wrapValueInFunction(1) });
     cache.set("key", "value");
     cache.set("key2", "value2");
     expect(cache.get("key")).to.be.undefined;
@@ -32,7 +32,16 @@ describe("initCache", () => {
     expect(cache.values()).to.deep.equal([ "value2" ]);
   });
 
-  it("should set the age from param param", (done) => {
+  it("should set the max cache size from the `max` parameter", () => {
+    const cache = initCache({ max: 1, age: 1000, length: wrapValueInFunction(1) });
+    cache.set("key", "value");
+    cache.set("key2", "value2");
+    expect(cache.get("key")).to.be.undefined;
+    expect(cache.keys()).to.deep.equal([ "key2" ]);
+    expect(cache.values()).to.deep.equal([ "value2" ]);
+  });
+
+  it("should set the cache TTL from the `age` parameter", (done) => {
     const cache = initCache({ age: 0.002 });
     cache.set("key", "value");
     expect(cache.get("key")).to.equal("value");
@@ -44,9 +53,20 @@ describe("initCache", () => {
     }, 5);
   });
 
+  it("should set the cache TTL from the `maxAge` parameter", (done) => {
+    const cache = initCache({ maxAge: 0.002 });
+    cache.set("key", "value");
+    expect(cache.get("key")).to.equal("value");
+    setTimeout(() => {
+      expect(cache.get("key")).to.be.undefined;
+      expect(cache.keys()).to.deep.equal([]);
+      expect(cache.values()).to.deep.equal([]);
+      done();
+    }, 5);
+  });
 });
 
-function wrap(value) {
+function wrapValueInFunction(value) {
   return function () {
     return value;
   };
