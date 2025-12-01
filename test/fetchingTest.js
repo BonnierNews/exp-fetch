@@ -7,6 +7,7 @@ const crypto = require("crypto");
 describe("fetch", () => {
   const host = "http://example.com";
   const path = "/testing123";
+  const url = host + path;
   const fake = nock(host, { badheaders: [ "correlation-id", "x-correlation-id" ] });
   beforeEach(nock.cleanAll);
 
@@ -15,7 +16,7 @@ describe("fetch", () => {
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
 
       const fetch = fetchBuilder().fetch;
-      const pendingResponse = fetch(host + path);
+      const pendingResponse = fetch(url);
 
       const awaitResponse = await pendingResponse;
       expect(awaitResponse).to.deep.equal({ some: "content" });
@@ -43,7 +44,7 @@ describe("fetch", () => {
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
 
       const fetch = fetchBuilder().fetch;
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(err).to.not.exist;
         expect(body).to.deep.equal({ some: "content" });
         done();
@@ -64,31 +65,31 @@ describe("fetch", () => {
     it("should support all the verbs", async () => {
       const request = fetchBuilder();
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.get(host + path).then((body2) => {
+      await request.get(url).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.post(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.post(host + path, { foo: "bar" }).then((body2) => {
+      await request.post(url, { foo: "bar" }).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.put(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.put(host + path, { foo: "bar" }).then((body2) => {
+      await request.put(url, { foo: "bar" }).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.patch(path, { foo: "bar" }).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.patch(host + path, { foo: "bar" }).then((body2) => {
+      await request.patch(url, { foo: "bar" }).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.head(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.head(host + path).then((body2) => {
+      await request.head(url).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.options(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.options(host + path).then((body2) => {
+      await request.options(url).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
       fake.delete(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.del(host + path, { foo: "bar" }).then((body2) => {
+      await request.del(url, { foo: "bar" }).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
     });
@@ -99,7 +100,7 @@ describe("fetch", () => {
 
     it("should should fetch an url", (done) => {
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(body).to.deep.equal({ some: "content" });
         done(err);
       });
@@ -108,7 +109,7 @@ describe("fetch", () => {
     it("should be able to pass on request headers", (done) => {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
-        url: host + path,
+        url,
         headers: { "User-Agent": "request" },
       };
       fetch(options, (err, body) => {
@@ -120,7 +121,7 @@ describe("fetch", () => {
     it("should be able to pass on request headers in promises", (done) => {
       fake.get(path).matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
-        url: host + path,
+        url,
         headers: { "User-Agent": "request" },
       };
       fetch(options).then((body) => {
@@ -133,7 +134,7 @@ describe("fetch", () => {
       fake.get(path).reply(301, {}, { "cache-control": "no-cache", location: "http://example.com/testing321" });
       fake.get("/testing321").matchHeader("User-Agent", "request").reply(200, { some: "content" }, { "cache-control": "no-cache" });
       const options = {
-        url: host + path,
+        url,
         headers: { "User-Agent": "request" },
       };
       fetch(options, (err, body) => {
@@ -144,7 +145,7 @@ describe("fetch", () => {
 
     it("should get null if 404", (done) => {
       fake.get(path).reply(404, { some: "content" }, { "cache-control": "no-cache" });
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(body).to.equal(null);
         done(err);
       });
@@ -152,7 +153,7 @@ describe("fetch", () => {
 
     it("should render error on none 200", (done) => {
       fake.get(path).reply(500, { some: "content" }, { "cache-control": "no-cache" });
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         expect(err).to.be.instanceof(Error);
         done();
       });
@@ -161,7 +162,7 @@ describe("fetch", () => {
     it("should not freeze content if freeze is set to false", (done) => {
       const localFetch = fetchBuilder({ freeze: false, clone: false }).fetch;
       fake.get(path).reply(200, { some: "content", child: { some: "child-content" } }, { "cache-control": "no-cache" });
-      localFetch(host + path, (err, content) => {
+      localFetch(url, (err, content) => {
         expect(Object.isFrozen(content)).to.be.false;
         expect(Object.isFrozen(content.child)).to.be.false;
         done(err);
@@ -171,7 +172,7 @@ describe("fetch", () => {
     it("should freeze the result root but not descendants by default", (done) => {
       const localFetch = fetchBuilder({ clone: false }).fetch;
       fake.get(path).reply(200, { some: "content", child: { some: "child-content" } }, { "cache-control": "no-cache" });
-      localFetch(host + path, (err, content) => {
+      localFetch(url, (err, content) => {
         expect(Object.isFrozen(content)).to.be.true;
         expect(Object.isFrozen(content.child)).to.be.false;
         done(err);
@@ -181,7 +182,7 @@ describe("fetch", () => {
     it("should freeze objects recursively if deepFreeze is set to true", (done) => {
       const localFetch = fetchBuilder({ deepFreeze: true, clone: false }).fetch;
       fake.get(path).reply(200, { some: "content", child: { some: "child-content" } }, { "cache-control": "no-cache" });
-      localFetch(host + path, (err, content) => {
+      localFetch(url, (err, content) => {
         if (err) return done(err);
         expect(Object.isFrozen(content)).to.be.true;
         expect(Object.isFrozen(content.child)).to.be.true;
@@ -203,7 +204,7 @@ describe("fetch", () => {
 
       const fetch = fetchBuilder(behavior).fetch;
       fake.get(path).reply(statusCode, {}, { "cache-control": "no-cache" });
-      fetch(host + path, () => {
+      fetch(url, () => {
         expect(called).to.be.true;
         done();
       });
@@ -243,7 +244,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         if (err) return done(err);
         expect(called).to.be.true;
         done();
@@ -265,7 +266,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err, res) => {
+      fetch(url, (err, res) => {
         if (err) return done(err);
         expect(called).to.be.true;
         expect(res.statusCode).to.eql(301);
@@ -290,7 +291,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         if (err) return done(err);
         expect(called).to.be.true;
         done();
@@ -313,10 +314,10 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err0) => {
+      fetch(url, (err0) => {
         if (err0) return done(err0);
         called = false;
-        fetch(host + path, (err) => {
+        fetch(url, (err) => {
           if (err) return done(err);
           expect(called).to.be.true;
           done();
@@ -360,7 +361,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         if (err) return done(err);
         expect(body).to.eql({});
         done();
@@ -379,7 +380,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         if (err) return done(err);
         expect(body).to.eql({});
         done();
@@ -397,7 +398,7 @@ describe("fetch", () => {
       };
 
       const fetch = fetchBuilder(behavior).fetch;
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         if (err) return done(err);
         expect(body).to.eql({});
         done();
@@ -409,10 +410,10 @@ describe("fetch", () => {
     it("should cache by default", (done) => {
       const fetch = fetchBuilder().fetch;
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
-      fetch(host + path, (_, body0) => {
+      fetch(url, (_, body0) => {
         expect(body0).to.deep.equal({ some: "content" });
         fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
-        fetch(host + path, (err, body1) => {
+        fetch(url, (err, body1) => {
           if (err) return done(err);
           expect(body1).to.deep.equal({ some: "content" });
           expect(fake.pendingMocks()).to.deep.equal([ `GET ${host}:80${path}` ]);
@@ -424,10 +425,10 @@ describe("fetch", () => {
     it("should not cache if falsy cache is given", (done) => {
       const fetch = fetchBuilder({ cache: null }).fetch;
       fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
-      fetch(host + path, (_, body0) => {
+      fetch(url, (_, body0) => {
         expect(body0).to.deep.equal({ some: "content" });
         fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
-        fetch(host + path, (err, body1) => {
+        fetch(url, (err, body1) => {
           if (err) return done(err);
           expect(body1).to.deep.equal({ some: "contentz" });
           done();
@@ -443,7 +444,7 @@ describe("fetch", () => {
 
       const fetch = fetchBuilder({ cacheKeyFn }).fetch;
       Promise.all([
-        fetch(host + path),
+        fetch(url),
         fetch(`http://other.expample.com${path}`),
         fetch(`${host}/testing/123/`),
       ]).then((result) => {
@@ -456,17 +457,17 @@ describe("fetch", () => {
     it("should cache with a lookup function using the headers", (done) => {
       fake.get(path).matchHeader("foo", "foo").reply(200, { some: "content" }, { "cache-control": "max-age=30" });
       fake.get(path).matchHeader("foo", "foo2").reply(200, { some: "content2" }, { "cache-control": "max-age=30" });
-      function cacheKeyFn(url, body, headers) {
-        const cacheKey = crypto.createHash("md5").update(`${url} ${headers.foo}`).digest("hex");
+      function cacheKeyFn(uri, _body, headers) {
+        const cacheKey = crypto.createHash("md5").update(`${uri} ${headers.foo}`).digest("hex");
         return cacheKey;
       }
 
       const fetch = fetchBuilder({ cacheKeyFn }).fetch;
       Promise.all([
-        fetch({ url: host + path, headers: { foo: "foo" } }),
-        fetch({ url: host + path, headers: { foo: "foo2" } }),
-        fetch({ url: host + path, headers: { foo: "foo2" } }),
-        fetch({ url: host + path, headers: { foo: "foo" } }),
+        fetch({ url, headers: { foo: "foo" } }),
+        fetch({ url, headers: { foo: "foo2" } }),
+        fetch({ url, headers: { foo: "foo2" } }),
+        fetch({ url, headers: { foo: "foo" } }),
       ]).then((result) => {
         expect(result[0]).to.deep.equal({ some: "content" }).eql(result[3]);
         expect(result[1]).to.deep.equal({ some: "content2" }).eql(result[2]);
@@ -484,7 +485,7 @@ describe("fetch", () => {
         };
       };
       const fetch = fetchBuilder({ cacheValueFn: valueFn }).fetch;
-      fetch(host + path, (err, content) => {
+      fetch(url, (err, content) => {
         expect(content).to.deep.equal({
           body: { some: "content" },
           headers: {
@@ -504,10 +505,10 @@ describe("fetch", () => {
       }
 
       const { fetch, stats } = fetchBuilder({ maxAgeFn });
-      fetch(host + path).then((content0) => {
+      fetch(url).then((content0) => {
         fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
         expect(content0).to.deep.equal({ some: "content" });
-        fetch(host + path).then((content1) => {
+        fetch(url).then((content1) => {
           expect(content1).to.deep.equal({ some: "content" });
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -525,15 +526,15 @@ describe("fetch", () => {
       }
 
       const fetch = fetchBuilder({ maxAgeFn, errorOnRemoteError: false }).fetch;
-      fetch(host + path);
+      fetch(url);
     });
 
     it("should not cache 404s by default", (done) => {
       const { fetch, stats } = fetchBuilder();
       fake.get(path).reply(404);
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.deep.equal({ some: "content" });
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -547,9 +548,9 @@ describe("fetch", () => {
     it("should cache 404s if cacheNotFound is a number", (done) => {
       const { fetch, stats } = fetchBuilder({ cacheNotFound: 1000 });
       fake.get(path).reply(404);
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.equal(null);
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -563,9 +564,9 @@ describe("fetch", () => {
     it("should cache 404s if cacheNotFound is \"true\"", (done) => {
       const { fetch, stats } = fetchBuilder({ cacheNotFound: true });
       fake.get(path).reply(404, null, { "cache-control": "max-age=30" });
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.equal(null);
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -579,9 +580,9 @@ describe("fetch", () => {
     it("should not cache 404s if cacheNotFound is \"false\"", (done) => {
       const { fetch, stats } = fetchBuilder({ cacheNotFound: false });
       fake.get(path).reply(404);
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.deep.equal({ some: "content" });
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -599,9 +600,9 @@ describe("fetch", () => {
 
       const { fetch, stats } = fetchBuilder({ cacheNotFound: -1, maxAgeFn });
       fake.get(path).reply(404);
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.be.null;
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -615,9 +616,9 @@ describe("fetch", () => {
     it("should not cache errors with empty response", (done) => {
       const { fetch, stats } = fetchBuilder();
       fake.get(path).reply(500);
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "content" }, { "cache-control": "max-age=30" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.deep.equal({ some: "content" });
           expect(stats()).to.deep.equal({
             calls: 2,
@@ -631,9 +632,9 @@ describe("fetch", () => {
     it("should not cache errors with string response", (done) => {
       const fetch = fetchBuilder().fetch;
       fake.get(path).reply(500, "Internal Error");
-      fetch(host + path, () => {
+      fetch(url, () => {
         fake.get(path).reply(200, { some: "contentz" }, { "cache-control": "max-age=30" });
-        fetch(host + path, (err, body) => {
+        fetch(url, (err, body) => {
           expect(body).to.deep.equal({ some: "contentz" });
           done(err);
         });
@@ -643,8 +644,23 @@ describe("fetch", () => {
     it("should not return an error if errorOnRemoteError is false", (done) => {
       const fetch = fetchBuilder({ errorOnRemoteError: false }).fetch;
       fake.get(path).reply(500);
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         done(err);
+      });
+    });
+
+    it("should return the original error if errorOnRemoteError is not disabled", (done) => {
+      const fetch = fetchBuilder().fetch;
+      fake.get(path).reply(500, "Internal Server Error");
+      fetch(url, (err) => {
+        expect(err).to.be.instanceof(Error);
+        expect(err).to.have.property("statusCode", 500);
+        expect(err).to.have.property("message", "exp-fetch: fetching \"http://example.com/testing123\" failed: Response code 500 (Internal Server Error)");
+        const originalError = err.cause();
+        expect(originalError).to.be.instanceof(Error);
+        expect(originalError).to.have.property("message", "Response code 500 (Internal Server Error)");
+        expect(originalError).to.have.property("response");
+        done();
       });
     });
   });
@@ -653,7 +669,7 @@ describe("fetch", () => {
     it("should fetch json", (done) => {
       const fetch = fetchBuilder({ contentType: "json" }).fetch;
       fake.get(path).reply(200, { some: "content" });
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(body).to.deep.equal({ some: "content" });
         done(err);
       });
@@ -663,7 +679,7 @@ describe("fetch", () => {
       const fetch = fetchBuilder({ contentType: "xml" }).fetch;
       const xmlString = " <?xml version=\"1.0\" encoding=\"utf-8\"?><channel><title>Expressen: Nyheter</title><link>http://www.expressen.se/</link></channel>";
       fake.get(path).reply(200, xmlString, { ContentType: "text/xml" });
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(body).to.deep.equal({
           channel: {
             title: "Expressen: Nyheter",
@@ -678,7 +694,7 @@ describe("fetch", () => {
       const fetch = fetchBuilder({ contentType: "text" }).fetch;
       const textResponse = "This is just plain text";
       fake.get(path).reply(200, textResponse, { ContentType: "text/html" });
-      fetch(host + path, (err, body) => {
+      fetch(url, (err, body) => {
         expect(body).to.deep.equal("This is just plain text");
         done(err);
       });
@@ -694,7 +710,7 @@ describe("fetch", () => {
         .matchHeader("x-exp-fetch-appname", "exp-fetch")
         .reply(200);
 
-      return fetch(host + path);
+      return fetch(url);
     });
   });
 
@@ -707,7 +723,7 @@ describe("fetch", () => {
         .matchHeader("User-Agent", `exp-fetch/${packageInfo.version}`)
         .reply(200);
 
-      return fetch(host + path);
+      return fetch(url);
     });
   });
 
@@ -733,7 +749,7 @@ describe("fetch", () => {
         .get(path)
         .reply(200, { data: 1 });
 
-      const response = await fetch(host + path);
+      const response = await fetch(url);
       expect(response).to.deep.equal({ data: 1 });
     });
   });
@@ -747,7 +763,7 @@ describe("fetch", () => {
         .delay(600)
         .reply(200, { some: "content" });
 
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         if (!err) return done(new Error("No timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -762,7 +778,7 @@ describe("fetch", () => {
         .delayConnection(30)
         .reply(200, { some: "content" });
 
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         if (!err) return done(new Error("No socket timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -782,7 +798,7 @@ describe("fetch", () => {
         .delayBody(300)
         .reply(200, { some: "content" });
 
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         if (!err) return done(new Error("No response timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -796,7 +812,7 @@ describe("fetch", () => {
         .delay(30)
         .reply(200, { some: "content" });
 
-      fetch({ url: host + path, timeout: 1 }, (err) => {
+      fetch({ url, timeout: 1 }, (err) => {
         if (!err) return done(new Error("No timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -811,7 +827,7 @@ describe("fetch", () => {
         .reply(200, { some: "content" });
 
       fetch({
-        url: host + path,
+        url,
         timeout: { socket: 10 },
       }, (err) => {
         if (!err) return done(new Error("No timeout"));
@@ -830,7 +846,7 @@ describe("fetch", () => {
         .get("/someotherpath")
         .delay(30)
         .reply(200, { some: "content" });
-      fetch({ url: host + path, timeout: 1 }, (err) => {
+      fetch({ url, timeout: 1 }, (err) => {
         if (!err) return done(new Error("No timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -843,7 +859,7 @@ describe("fetch", () => {
         .get(path)
         .delay(30)
         .reply(200, { some: "content" });
-      fetch({ url: host + path, timeout: 1 }).catch((err) => {
+      fetch({ url, timeout: 1 }).catch((err) => {
         if (!err) return done(new Error("No timeout"));
         expect(err.message).to.include("ESOCKETTIMEDOUT");
         done();
@@ -855,7 +871,7 @@ describe("fetch", () => {
     it("should pass on the error status code", (done) => {
       const fetch = fetchBuilder().fetch;
       fake.get(path).reply(500, "Internal Server Error");
-      fetch(host + path, (err) => {
+      fetch(url, (err) => {
         expect(err).to.be.ok;
         expect(err.statusCode).to.equal(500);
         done();
@@ -867,7 +883,7 @@ describe("fetch", () => {
     const fetch = fetchBuilder({ headers: { "User-Agent": "request" } }).fetch;
 
     const options = {
-      url: host + path,
+      url,
       headers: { "X-Test": "test" },
     };
 

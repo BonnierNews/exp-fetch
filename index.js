@@ -4,7 +4,6 @@ const got = require("got");
 const VError = require("verror");
 const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
-const util = require("util");
 
 const getMaxAge = require("./lib/maxAgeFromHeader");
 const dummyLogger = require("./lib/dummyLogger");
@@ -79,7 +78,9 @@ function buildFetch(behavior) {
     return resolvedCallback(null, cacheValueFn(null, res.headers, res.statusCode), notFoundAge);
   }
 
-  function handleError(url, cacheKey, res, content, resolvedCallback) {
+  function handleError(url, cacheKey, originalError, resolvedCallback) {
+    const res = originalError.response;
+    const content = res.body;
     if (typeof logger.warning === "function") {
       logger.warning("HTTP Fetching error %d for: %j", res.statusCode, url);
     } else if (typeof logger.warn === "function") {
@@ -95,7 +96,7 @@ function buildFetch(behavior) {
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
 
     if (errorOnRemoteError) {
-      const error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
+      const error = new VError(originalError, "exp-fetch: fetching \"%s\" failed", url);
       error.statusCode = res.statusCode;
 
       return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
@@ -200,7 +201,7 @@ function buildFetch(behavior) {
           if (err.response.statusCode === 404) {
             return handleNotFound(url, cacheKey, err.response, err.response.body, resolvedCallback);
           } else if (err.response.statusCode > 299) {
-            return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
+            return handleError(url, cacheKey, err, resolvedCallback);
           }
         } else if (err instanceof got.TimeoutError) {
           const { message, timings } = err;
