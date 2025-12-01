@@ -245,11 +245,10 @@ var initLRUCache = require("exp-fetch").initLRUCache;
 var cache = new AsyncCache(initLRUCache({ age: 60, size: 2000});
 ```
 
-### Allowed params:
+### Settings:
 
-* `size` or `max`: the max allowed size, the unit is set by the `length` method. Default is `value.length`. Default: 2000000
-* `length`: the length function, default is `v && v.length || 1`
-* `age` or `maxAge`: the maximum number of seconds a key will be kept in the cache. Default `60`
+* `size` or `max`: the maximum amount of objects. Default: `2_000_000`
+* `age` or `maxAge`: the number of seconds before the cached item goes stale. Default: `60`
 
 ## Stats
 
