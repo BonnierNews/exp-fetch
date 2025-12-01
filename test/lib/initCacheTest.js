@@ -24,7 +24,7 @@ describe("initCache", () => {
   });
 
   it("should set the max cache size from the `size` parameter", () => {
-    const cache = initCache({ size: 1, age: 1000, length: wrapValueInFunction(1) });
+    const cache = initCache({ size: 1, age: 1000 });
     cache.set("key", "value");
     cache.set("key2", "value2");
     expect(cache.get("key")).to.be.undefined;
@@ -33,7 +33,7 @@ describe("initCache", () => {
   });
 
   it("should set the max cache size from the `max` parameter", () => {
-    const cache = initCache({ max: 1, age: 1000, length: wrapValueInFunction(1) });
+    const cache = initCache({ max: 1, age: 1000 });
     cache.set("key", "value");
     cache.set("key2", "value2");
     expect(cache.get("key")).to.be.undefined;
@@ -65,9 +65,3 @@ describe("initCache", () => {
     }, 5);
   });
 });
-
-function wrapValueInFunction(value) {
-  return function () {
-    return value;
-  };
-}
