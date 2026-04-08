@@ -71,6 +71,8 @@ async function testTimeout() {
   } catch (error) {
     console.timeEnd("fetch took:");
     console.log("testFetchTimout error: ", error.message);
+    if (error.code) console.log("  error.code:", error.code);
+    if (error.timeout) console.log("  error.timeout:", error.timeout, "ms");
   }
 }
 

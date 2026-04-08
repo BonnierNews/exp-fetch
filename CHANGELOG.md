@@ -1,6 +1,36 @@
 Changelog
 =========
 
+# 7.0.0
+
+## Breaking Changes
+
+* **Replaced `got` with Node.js native `fetch`** — removes `got` dependency entirely. The library now
+  uses the built-in `fetch` API available in Node.js 18+.
+* **Requires Node.js >= 18** — needed for native `fetch` support. Node 20+ is recommended.
+* **Timeout error messages are now descriptive** — instead of the opaque `ESOCKETTIMEDOUT` message,
+  timeout errors now include the URL and configured timeout value.
+  Example: `"Request to https://example.com/api timed out after 5000ms"`.
+  Timeout errors have `error.code = "TIMEOUT"` and `error.timeout` (the configured timeout in ms).
+* **`hooks` are now executed natively** — the `hooks` behavior option (`beforeRequest`, `afterResponse`,
+  `beforeRetry`, `beforeError`) is still supported but is now executed by exp-fetch itself instead of
+  being forwarded to `got`. Hook signatures are compatible with got v11.
+* **Removed `agent` option** — native `fetch` does not use `http.Agent`. Node.js native fetch uses
+  keep-alive by default.
+* **Removed `verror` dependency** — errors are now plain `Error` instances.
+* **Removed `got` dependency** — reduces transitive dependency count significantly.
+
+## Other Changes
+
+* Upgraded `nock` from v13 to v14 (supports native `fetch` interception via `@mswjs/interceptors`).
+* Retry mechanism is now built-in (previously delegated to `got`). Supports the same configuration:
+  `retry: 0` (default), `retry: N`, or `retry: { limit, retries, methods, statusCodes, calculateDelay }`.
+* Added `engines` field to `package.json`: `"node": ">=18"`.
+
+# 6.0.0
+
+* No changelog entry — bumped from 5.x with deepFreeze support.
+
 # 5.5.0
 
 * Added a third argument to `cacheKeyFn` containing the headers to enable using headers as part

@@ -9,6 +9,10 @@ describe("fetch", () => {
   const path = "/testing123";
   const fake = nock(host, { badheaders: [ "correlation-id", "x-correlation-id" ] });
   beforeEach(nock.cleanAll);
+  afterEach(() => {
+    nock.abortPendingRequests();
+    nock.cleanAll();
+  });
 
   describe("Promise API", () => {
     it("returns resolving promise on success", async () => {
@@ -79,10 +83,8 @@ describe("fetch", () => {
       await request.patch(host + path, { foo: "bar" }).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
       });
-      fake.head(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
-      await request.head(host + path).then((body2) => {
-        expect(body2).to.deep.equal({ some: "content" });
-      });
+      fake.head(path).reply(200, undefined, { "cache-control": "no-cache" });
+      await request.head(host + path);
       fake.options(path).reply(200, { some: "content" }, { "cache-control": "no-cache" });
       await request.options(host + path).then((body2) => {
         expect(body2).to.deep.equal({ some: "content" });
@@ -345,6 +347,183 @@ describe("fetch", () => {
       fetch(`${host}/parallel-2`, (err) => {
         if (err) return done(err);
       });
+    });
+  });
+
+  describe("Got-style hooks", () => {
+    it("should call beforeRequest hooks before making request", (done) => {
+      const called = [];
+      const behavior = {
+        hooks: {
+          beforeRequest: [
+            (options) => {
+              called.push("hook1");
+              options.headers["x-custom"] = "injected";
+            },
+          ],
+        },
+      };
+
+      nock(host).get(path)
+        .matchHeader("x-custom", "injected")
+        .reply(200, { ok: true }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(called).to.deep.equal(["hook1"]);
+        expect(body).to.deep.equal({ ok: true });
+        done();
+      });
+    });
+
+    it("should call multiple beforeRequest hooks in order", (done) => {
+      const called = [];
+      const behavior = {
+        hooks: {
+          beforeRequest: [
+            () => { called.push("first"); },
+            () => { called.push("second"); },
+          ],
+        },
+      };
+
+      fake.get(path).reply(200, {}, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err) => {
+        if (err) return done(err);
+        expect(called).to.deep.equal(["first", "second"]);
+        done();
+      });
+    });
+
+    it("should call afterResponse hooks with response", (done) => {
+      const responses = [];
+      const behavior = {
+        hooks: {
+          afterResponse: [
+            (response) => {
+              responses.push(response.statusCode);
+              return response;
+            },
+          ],
+        },
+      };
+
+      fake.get(path).reply(200, { data: "yes" }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(responses).to.deep.equal([200]);
+        expect(body).to.deep.equal({ data: "yes" });
+        done();
+      });
+    });
+
+    it("should allow afterResponse to modify the response", (done) => {
+      const behavior = {
+        hooks: {
+          afterResponse: [
+            (response) => {
+              response.body = { modified: true };
+              return response;
+            },
+          ],
+        },
+      };
+
+      fake.get(path).reply(200, { original: true }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(body).to.deep.equal({ modified: true });
+        done();
+      });
+    });
+
+    it("should call beforeError hooks to transform errors", (done) => {
+      const behavior = {
+        timeout: 50,
+        hooks: {
+          beforeError: [
+            (error) => {
+              error.customProperty = "enriched";
+              return error;
+            },
+          ],
+        },
+      };
+
+      nock(host).get("/hooks-error-test").delay(200).reply(200, {}, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(`${host}/hooks-error-test`, (err) => {
+        expect(err).to.exist;
+        expect(err.customProperty).to.equal("enriched");
+        done();
+      });
+    });
+
+    it("should call beforeRetry hooks before retrying", (done) => {
+      const retryCalls = [];
+      const behavior = {
+        retry: { limit: 2, calculateDelay: () => 0 },
+        hooks: {
+          beforeRetry: [
+            (error, retryCount) => {
+              retryCalls.push({ retryCount });
+            },
+          ],
+        },
+      };
+
+      nock(host).get("/hooks-retry-test").reply(503, {}, { "cache-control": "no-cache" });
+      nock(host).get("/hooks-retry-test").reply(503, {}, { "cache-control": "no-cache" });
+      nock(host).get("/hooks-retry-test").reply(200, { ok: true }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(`${host}/hooks-retry-test`, (err, body) => {
+        if (err) return done(err);
+        expect(retryCalls).to.have.length(2);
+        expect(body).to.deep.equal({ ok: true });
+        done();
+      });
+    });
+
+    it("should work with empty hooks object", (done) => {
+      const behavior = { hooks: {} };
+
+      fake.get(path).reply(200, { ok: true }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      fetch(host + path, (err, body) => {
+        if (err) return done(err);
+        expect(body).to.deep.equal({ ok: true });
+        done();
+      });
+    });
+
+    it("should support async beforeRequest hooks", async () => {
+      const behavior = {
+        hooks: {
+          beforeRequest: [
+            async (options) => {
+              options.headers["x-async"] = "async-value";
+            },
+          ],
+        },
+      };
+
+      nock(host).get(path)
+        .matchHeader("x-async", "async-value")
+        .reply(200, { async: true }, { "cache-control": "no-cache" });
+
+      const fetch = fetchBuilder(behavior).fetch;
+      const body = await fetch(host + path);
+      expect(body).to.deep.equal({ async: true });
     });
   });
 
@@ -691,31 +870,35 @@ describe("fetch", () => {
 
   describe("timeout", () => {
     it("should honour timeout set in behavior", (done) => {
-      const fetch = fetchBuilder({ timeout: 10 }).fetch;
+      const fetch = fetchBuilder({ timeout: 50 }).fetch;
 
-      fake
+      nock(host)
         .get(path)
         .delay(600)
         .reply(200, { some: "content" });
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.message).to.include("50ms");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
 
     it("should honour socket timeout set in behavior", (done) => {
-      const fetch = fetchBuilder({ timeout: { socket: 10 } }).fetch;
+      const fetch = fetchBuilder({ timeout: { socket: 50 } }).fetch;
 
-      fake
+      nock(host)
         .get(path)
-        .delayConnection(30)
+        .delay(200)
         .reply(200, { some: "content" });
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No socket timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.message).to.include("50ms");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
@@ -723,80 +906,88 @@ describe("fetch", () => {
     it("should honour response timeout set in behavior", (done) => {
       const fetch = fetchBuilder({
         timeout: {
-          socket: 100,
-          request: 200,
+          socket: 500,
+          request: 100,
         },
       }).fetch;
 
-      fake
+      nock(host)
         .get(path)
-        .delayBody(300)
+        .delay(300)
         .reply(200, { some: "content" });
 
       fetch(host + path, (err) => {
         if (!err) return done(new Error("No response timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.message).to.include("100ms");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
 
     it("should allow overriding behavior timeout per request", (done) => {
-      const fetch = fetchBuilder({ timeout: 200 }).fetch;
-      fake
+      const fetch = fetchBuilder({ timeout: 2000 }).fetch;
+      nock(host)
         .get(path)
-        .delay(30)
+        .delay(200)
         .reply(200, { some: "content" });
 
-      fetch({ url: host + path, timeout: 1 }, (err) => {
+      fetch({ url: host + path, timeout: 50 }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.message).to.include("50ms");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
 
     it("should allow overriding timeout behavior with object for socket timeout", (done) => {
-      const fetch = fetchBuilder({ timeout: 200 }).fetch;
-      fake
+      const fetch = fetchBuilder({ timeout: 2000 }).fetch;
+      nock(host)
         .get(path)
-        .delayConnection(30)
+        .delay(200)
         .reply(200, { some: "content" });
 
       fetch({
         url: host + path,
-        timeout: { socket: 10 },
+        timeout: { socket: 50 },
       }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.message).to.include("50ms");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
 
     it("should allow overriding behavior timeout per request when following redirects", (done) => {
-      const fetch = fetchBuilder({ timeout: 200 }).fetch;
-      fake
+      const fetch = fetchBuilder({ timeout: 2000 }).fetch;
+      nock(host)
         .get(path)
         .reply(301, null, { location: `${host}/someotherpath` });
 
-      fake
+      nock(host)
         .get("/someotherpath")
-        .delay(30)
+        .delay(200)
         .reply(200, { some: "content" });
-      fetch({ url: host + path, timeout: 1 }, (err) => {
+      fetch({ url: host + path, timeout: 50 }, (err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
 
     it("should allow overriding behavior timeout per request when using promises", (done) => {
-      const fetch = fetchBuilder({ timeout: 200 }).fetch;
-      fake
+      const fetch = fetchBuilder({ timeout: 2000 }).fetch;
+      nock(host)
         .get(path)
-        .delay(30)
+        .delay(200)
         .reply(200, { some: "content" });
-      fetch({ url: host + path, timeout: 1 }).catch((err) => {
+      fetch({ url: host + path, timeout: 50 }).catch((err) => {
         if (!err) return done(new Error("No timeout"));
-        expect(err.message).to.include("ESOCKETTIMEDOUT");
+        expect(err.message).to.include("timed out after");
+        expect(err.code).to.equal("TIMEOUT");
         done();
       });
     });
