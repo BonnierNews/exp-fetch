@@ -1,7 +1,5 @@
 "use strict";
 
-const got = require("got");
-const VError = require("verror");
 const AsyncCache = require("exp-asynccache");
 const clone = require("clone");
 const util = require("util");
@@ -41,7 +39,6 @@ function buildFetch(behavior) {
   const correlationIdHeader = behavior.correlationIdHeader || "correlation-id";
   let errorOnRemoteError = true;
   const contentType = (behavior.contentType || "json").toLowerCase();
-  const keepAliveAgent = behavior.agent;
   let followRedirect = true;
   let performClone = true;
   const maximumNumberOfRedirects = 10;
@@ -50,7 +47,7 @@ function buildFetch(behavior) {
   const stats = { calls: 0, misses: 0 };
   const globalHeaders = behavior.headers || {};
   const retry = "retry" in behavior ? behavior.retry : 0;
-  const hooks = "hooks" in behavior ? behavior.hooks : {}; // got hooks
+  const hooks = behavior.hooks || {};
 
   function defaultRequestTimeFn(requestOptions, took) {
     logger.debug("fetching %s: %s took %sms", requestOptions.method, requestOptions.url, took);
@@ -115,7 +112,7 @@ function buildFetch(behavior) {
     errorAge = maxAgeFn(errorAge, cacheKey, res, content);
 
     if (errorOnRemoteError) {
-      const error = new VError("%s yielded %s (%s)", url, res.statusCode, util.inspect(content));
+      const error = new Error(`${url} yielded ${res.statusCode} (${util.inspect(content)})`);
       error.statusCode = res.statusCode;
 
       return resolvedCallback(error, cacheValueFn(undefined, res.headers, res.statusCode), errorAge);
@@ -174,31 +171,15 @@ function buildFetch(behavior) {
       stats.misses++;
       logger.debug("fetching %s cacheKey '%s'", url, cacheKey);
 
-      const options = {
-        url,
-        responseType: contentType === "json" ? contentType : undefined,
-        agent: keepAliveAgent,
-        followRedirect: false,
-        retry,
-        method: method || httpMethod,
-        timeout: explicitTimeout || timeout,
-        headers,
-        cache: false,
-        hooks,
-      };
-
-      if (body && typeof body === "object") {
-        options.json = body;
-      } else if (body) {
-        options.body = body;
-      }
+      const requestMethod = method || httpMethod;
+      const requestTimeout = explicitTimeout || timeout;
 
       const passOptions = {
-        url: options.url,
-        method: options.method,
+        url,
+        method: requestMethod,
         responseType: contentType === "json" ? contentType : undefined,
         followRedirect,
-        headers: options.headers,
+        headers,
       };
 
       if (onRequestInit && !onRequestInit.called) {
@@ -210,23 +191,27 @@ function buildFetch(behavior) {
         resolveFunction(err, content, maxAge);
       }
 
-      return request(options).then((res) => {
+      return performFetchWithRetry(url, {
+        method: requestMethod,
+        headers,
+        body,
+        timeout: requestTimeout,
+        responseType: contentType === "json" ? "json" : undefined,
+      }, retry, hooks).then((res) => {
         if (isRedirect(res)) return handleRedirect(cacheKey, res, res.body, resolvedCallback);
+        if (res.statusCode === 404) {
+          return handleNotFound(url, cacheKey, res, res.body, resolvedCallback);
+        }
+        if (res.statusCode > 299) {
+          return handleError(url, cacheKey, res, res.body, resolvedCallback);
+        }
         return parseResponse(res.body, contentType, (_, transformed) => {
           return handleSuccess(url, cacheKey, res, transformed, resolvedCallback);
         });
       }).catch((err) => {
-        if (err instanceof got.HTTPError) {
-          if (err.response.statusCode === 404) {
-            return handleNotFound(url, cacheKey, err.response, err.response.body, resolvedCallback);
-          } else if (err.response.statusCode > 299) {
-            return handleError(url, cacheKey, err.response, err.response.body, resolvedCallback);
-          }
-        } else if (err instanceof got.TimeoutError) {
-          const { message, timings } = err;
-          logger.debug(`Message: ${message}`);
-          logger.debug(`Timings: ${JSON.stringify(timings, null, 2)}`);
-          return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
+        if (err.code === "TIMEOUT") {
+          logger.debug(`Timeout: ${err.message}`);
+          return resolvedCallback(err);
         }
 
         return resolvedCallback(err);
@@ -237,7 +222,7 @@ function buildFetch(behavior) {
           const location = new URL(response.headers.location, url).toString();
           return performRequest(location, headers, explicitTimeout, method, body, redirectCount, callback);
         } else {
-          return callback(new VError("Maximum number of redirects exceeded while fetching", url));
+          return callback(new Error("Maximum number of redirects exceeded while fetching"));
         }
       }
       callback(err, (performClone ? clone(response) : response));
@@ -326,6 +311,154 @@ function passThrough(key) {
   return key;
 }
 
-function request({ url, ...options }) {
-  return got(url, { cache: false, ...options });
+function resolveTimeoutMs(timeout) {
+  if (typeof timeout === "number") return timeout;
+  if (typeof timeout === "object" && timeout !== null) {
+    // Support { socket, request } timeout objects for backward compat
+    return timeout.request || timeout.socket || 20000;
+  }
+  return 20000;
+}
+
+async function performFetch(url, { method, headers, body, timeout: timeoutOpt, responseType }, hooks) {
+  hooks = hooks || {};
+  const controller = new AbortController();
+  const effectiveTimeout = resolveTimeoutMs(timeoutOpt);
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
+
+  const init = {
+    method,
+    headers: { ...headers },
+    signal: controller.signal,
+    redirect: "manual",
+  };
+
+  if (body && typeof body === "object") {
+    init.body = JSON.stringify(body);
+    if (!init.headers["content-type"] && !init.headers["Content-Type"]) {
+      init.headers["content-type"] = "application/json";
+    }
+  } else if (body) {
+    init.body = body;
+  }
+
+  // Run beforeRequest hooks
+  if (hooks.beforeRequest) {
+    for (const hook of hooks.beforeRequest) {
+      await hook(init);
+    }
+  }
+
+  try {
+    const response = await fetch(url, init);
+    clearTimeout(timer);
+
+    // Normalize headers to plain object (lowercase keys)
+    const normalizedHeaders = {};
+    response.headers.forEach((value, key) => {
+      normalizedHeaders[key] = value;
+    });
+
+    // Read body
+    let parsedBody;
+    if (responseType === "json") {
+      const text = await response.text();
+      try {
+        parsedBody = text ? JSON.parse(text) : "";
+      } catch (_) {
+        parsedBody = text;
+      }
+    } else {
+      parsedBody = await response.text();
+    }
+
+    let result = {
+      statusCode: response.status,
+      headers: normalizedHeaders,
+      body: parsedBody,
+    };
+
+    // Run afterResponse hooks
+    if (hooks.afterResponse) {
+      for (const hook of hooks.afterResponse) {
+        result = await hook(result);
+      }
+    }
+
+    return result;
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === "AbortError") {
+      let timeoutError = new Error(
+        `Request to ${url} timed out after ${effectiveTimeout}ms`
+      );
+      timeoutError.code = "TIMEOUT";
+      timeoutError.timeout = effectiveTimeout;
+
+      // Run beforeError hooks
+      if (hooks.beforeError) {
+        for (const hook of hooks.beforeError) {
+          timeoutError = await hook(timeoutError);
+        }
+      }
+      throw timeoutError;
+    }
+
+    // Run beforeError hooks for non-timeout errors
+    if (hooks.beforeError) {
+      let transformedErr = err;
+      for (const hook of hooks.beforeError) {
+        transformedErr = await hook(transformedErr);
+      }
+      throw transformedErr;
+    }
+    throw err;
+  }
+}
+
+async function performFetchWithRetry(url, options, retryConfig, hooks) {
+  hooks = hooks || {};
+  const limit = typeof retryConfig === "number" ? retryConfig : (retryConfig && retryConfig.limit) || (retryConfig && retryConfig.retries) || 0;
+  if (limit === 0) return performFetch(url, options, hooks);
+
+  const methods = (retryConfig && retryConfig.methods) || [ "GET", "PUT", "HEAD", "DELETE", "OPTIONS", "TRACE" ];
+  const statusCodes = (retryConfig && retryConfig.statusCodes) || [ 408, 413, 429, 500, 502, 503, 504, 521, 522, 524 ];
+  const calculateDelay = retryConfig && retryConfig.calculateDelay;
+
+  const methodUpper = (options.method || "GET").toUpperCase();
+  const shouldRetryMethod = methods.map((m) => m.toUpperCase()).includes(methodUpper);
+
+  let lastError;
+  for (let attempt = 0; attempt <= limit; attempt++) {
+    try {
+      const res = await performFetch(url, options, hooks);
+      if (shouldRetryMethod && statusCodes.includes(res.statusCode) && attempt < limit) {
+        // Run beforeRetry hooks
+        if (hooks.beforeRetry) {
+          for (const hook of hooks.beforeRetry) {
+            await hook(null, attempt + 1);
+          }
+        }
+        const delay = calculateDelay ? calculateDelay({ attemptCount: attempt + 1 }) : Math.min(1000 * Math.pow(2, attempt), 30000);
+        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      lastError = err;
+      if (attempt < limit && shouldRetryMethod) {
+        // Run beforeRetry hooks
+        if (hooks.beforeRetry) {
+          for (const hook of hooks.beforeRetry) {
+            await hook(err, attempt + 1);
+          }
+        }
+        const delay = calculateDelay ? calculateDelay({ attemptCount: attempt + 1 }) : Math.min(1000 * Math.pow(2, attempt), 30000);
+        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
 }

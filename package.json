@@ -1,6 +1,6 @@
 {
   "name": "exp-fetch",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "A small pluggable fetch lib",
   "main": "index.js",
   "scripts": {
@@ -21,19 +21,20 @@
     "url": "https://github.com/BonnierNews/exp-fetch/issues"
   },
   "homepage": "https://github.com/BonnierNews/exp-fetch",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "chai": "^4.3.6",
     "eslint": "^8.26.0",
     "eslint-config-exp": "^0.5.0",
     "mocha": "^10.1.0",
-    "nock": "^13.2.9"
+    "nock": "^14.0.0"
   },
   "dependencies": {
     "clone": "^2.1.1",
     "exp-asynccache": "^3.2.0",
-    "got": "^11.8.6",
     "lru-cache": "^6.0.0",
-    "verror": "^1.10.1",
     "xml2js": "^0.5.0"
   },
   "files": [

@@ -7,7 +7,10 @@ describe("Fetching redirected resources", () => {
   const host = "http://example.com";
   const path = "/testing123";
   const fake = nock(host);
-  afterEach(nock.cleanAll);
+  afterEach(() => {
+    nock.abortPendingRequests();
+    nock.cleanAll();
+  });
 
   function fakeRedirect(from, to, times) {
     fake

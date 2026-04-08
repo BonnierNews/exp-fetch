@@ -140,7 +140,11 @@ Note: these options are used for the `fetchBuilder`, not the `fetch`-function
 * `requestTimeFn`: (default log with level `debug`) If given a function, it will be called when the request returned and processed from remote end.
 * `retry`: see [got](https://github.com/sindresorhus/got) for details, defaults to 0
 * `timeout`: see [got](https://github.com/sindresorhus/got) for details, defaults to 20000ms
-* `hooks`: see [got](https://github.com/sindresorhus/got) for details, defaults to empty object
+* `hooks`: Hook functions called at various stages of the request lifecycle, defaults to empty object. Supported hooks:
+  - `beforeRequest`: Array of functions called before each HTTP request. Receives the request init options (can modify headers, etc.)
+  - `afterResponse`: Array of functions called after receiving a response. Receives the response object, must return it (optionally modified)
+  - `beforeRetry`: Array of functions called before a retry attempt. Receives `(error, retryCount)`
+  - `beforeError`: Array of functions called before an error is thrown. Receives the error, must return it (optionally enriched)
 
 The difference between `freeze` and `deepFreeze` is that `deepFreeze` walks the object graph and freezes any
 child objects in the retrieved data. `freeze` only freezes the root object but still allows modifications
@@ -282,7 +286,7 @@ In such a case, you can refer to the example file located at examples/timeout.js
 
 It's worth noting that having control over the responding server and its timeout can provide more flexibility and customization options for your requests.
 
-Please note that running the node timeout.js command in the root directory should result in a successful fetch. However, if you decrease the timeout value of the "socket" option to 3000 milliseconds or 3 seconds, you will encounter an ESOCKETTIMEDOUT error.
+Please note that running the node timeout.js command in the root directory should result in a successful fetch. However, if you decrease the timeout value of the "socket" option to 3000 milliseconds or 3 seconds, you will encounter a timeout error.
 
 This error indicates that the "socket" option must be set to a value higher than the server delay, and the "request" option must be set to a value higher than the timeout value of the "socket" option for the timeout options to function properly.
 
@@ -307,7 +311,7 @@ These values and property are examples and you can tweak and find other implemen
 
 NOTE: You can copy the examples/retry.js to root and run it with node `node retry.js` In retry.js script the server delay is simulated to be delayed and different timeouts are passed to the server response, which should be a more relastic scenario. 
 
-NOTE: Basically if you have a timout configuration that starts to throw `ESOCKETTIMEDOUT` error you can try to add some retry logic. The timout option can be left in place and will work if server timout does not increase. If server timeout would increase then the retry options would kick in and rescue the fetch.
+NOTE: Basically if you have a timeout configuration that starts to throw timeout errors you can try to add some retry logic. The timeout option can be left in place and will work if server timeout does not increase. If server timeout would increase then the retry options would kick in and rescue the fetch.
 
 ## Contributing
 
