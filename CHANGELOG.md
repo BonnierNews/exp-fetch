@@ -1,6 +1,19 @@
 Changelog
 =========
 
+# 6.0.1
+* **Refactor to make it more consistent and DRY**
+* **Fix bug when `cacheNotFound` was set to `true`**
+* **Test alternate names for caching parameters**
+* **Add the original error to `VError`**
+* **Remove `length` from `initLRUCache` settings**
+
+
+# 6.0.0
+* Make open source group codeowners
+* Add npm publishing workflow
+* Bump versions and update readme
+
 # 5.5.0
 
 * Added a third argument to `cacheKeyFn` containing the headers to enable using headers as part

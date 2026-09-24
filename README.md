@@ -120,7 +120,7 @@ Note: these options are used for the `fetchBuilder`, not the `fetch`-function
 * `agent`: (default: null), keepAlive Agent instance.
 * `cache`: (default: `an instance of AsyncCache`) (https://github.com/ExpressenAB/exp-asynccache). To disable caching set `{cache: null}`
 * `cacheKeyFn`: (default: caches on the url + sha1 of the body) An optional formatting function for finding the cache-key. One might, for example, want to cache on an url with the get params stripped or use some headers as part of the cache key.
-* `cacheNotFound`: (default: false). If set it will cache 404s, if given a number it will cache the 404 for that time. If the `maxAgeFn` is given, it will get this time as the first parameter.
+* `cacheNotFound`: (default: false). If set it will cache 404s. A number will cache the 404 for that time in milliseconds. If truthy, but not a number, it uses the "cache-control" header value. If the `maxAgeFn` is given, it will get this time as the first parameter.
 * `cacheValueFn`: (default: caches the response body) An optional function for change what will be returned and cached from fetch.
 * `clone`: (default: true), should fetch clone objects before handing them from the cache.
 * `contentType`: (default: `json`), expected content type. When set to `xml` the response will be parsed from XML to JSON. Other standard content-type values such as `text` or `text/html` are also accepted.
@@ -245,11 +245,10 @@ var initLRUCache = require("exp-fetch").initLRUCache;
 var cache = new AsyncCache(initLRUCache({ age: 60, size: 2000});
 ```
 
-### Allowed params:
+### Settings:
 
-* `size` or `max`: the max allowed size, the unit is set by the `length` method. Default is `value.length`. Default: 2000000
-* `length`: the length function, default is `v && v.length || 1`
-* `age` or `maxAge`: the maximum number of seconds a key will be kept in the cache. Default `60`
+* `size` or `max`: the maximum amount of objects. Default: `2_000_000`
+* `age` or `maxAge`: the number of seconds before the cached item goes stale. Default: `60`
 
 ## Stats
 
