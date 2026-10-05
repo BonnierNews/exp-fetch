@@ -1,5 +1,6 @@
 "use strict";
 
+const proxyquire = require("proxyquire");
 const initCache = require("../../lib/initCache");
 
 describe("initCache", () => {
@@ -63,5 +64,21 @@ describe("initCache", () => {
       expect(cache.values()).to.deep.equal([]);
       done();
     }, 5);
+  });
+
+  it("uses the default value for `maxAge` if none is provided", () => {
+    const lruOptions = [];
+    class FakeLRU {
+      constructor(options) {
+        lruOptions.push(options);
+      }
+      prune() {}
+    }
+    const initCacheWithSpy = proxyquire("../../lib/initCache", { "lru-cache": FakeLRU });
+
+    initCacheWithSpy({});
+
+    expect(lruOptions).to.have.length(1);
+    expect(lruOptions[0].maxAge).to.equal(60 * 1000);
   });
 });
