@@ -205,9 +205,9 @@ function buildFetch(behavior) {
           }
         } else if (err instanceof got.TimeoutError) {
           const { message, timings } = err;
-          logger.debug(`Message: ${message}`);
+          logger.debug(`Timeout fetching ${url}. Message: ${message}`);
           logger.debug(`Timings: ${JSON.stringify(timings, null, 2)}`);
-          return resolvedCallback(new VError("ESOCKETTIMEDOUT"));
+          return resolvedCallback(new VError("ESOCKETTIMEDOUT while fetching %s", url));
         }
 
         return resolvedCallback(err);
